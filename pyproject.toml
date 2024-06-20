@@ -47,6 +47,18 @@ dependencies = {file = ["requirements.txt"]}
 where = ["src"]
 include = [
     "instructlab.dolomite",
+    "instructlab.dolomite.hf_models",
+    "instructlab.dolomite.hf_models.models",
+    "instructlab.dolomite.hf_models.models.gpt_dolomite",
+    "instructlab.dolomite.hf_models.modeling_utils",
+    "instructlab.dolomite.hf_models.modeling_utils.activations",
+    "instructlab.dolomite.hf_models.modeling_utils.attention",
+    "instructlab.dolomite.hf_models.modeling_utils.normalization",
+    "instructlab.dolomite.hf_models.modeling_utils.normalization.layernorm",
+    "instructlab.dolomite.hf_models.modeling_utils.normalization.rmsnorm",
+    "instructlab.dolomite.hf_models.modeling_utils.position_embedding",
+    "instructlab.dolomite.gradient_checkpointing",
+    "instructlab.dolomite.utils",
 ]
 
 [tool.ruff]
