@@ -3,3 +3,5 @@ from .models import (
     GPTDolomiteForCausalLM,
     GPTDolomiteModel,
 )
+
+from .model_conversion import import_from_huggingface, export_to_huggingface

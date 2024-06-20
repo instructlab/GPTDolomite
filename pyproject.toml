@@ -49,6 +49,7 @@ include = [
     "instructlab.dolomite",
     "instructlab.dolomite.hf_models",
     "instructlab.dolomite.hf_models.models",
+    "instructlab.dolomite.hf_models.model_conversion",
     "instructlab.dolomite.hf_models.models.gpt_dolomite",
     "instructlab.dolomite.hf_models.modeling_utils",
     "instructlab.dolomite.hf_models.modeling_utils.activations",

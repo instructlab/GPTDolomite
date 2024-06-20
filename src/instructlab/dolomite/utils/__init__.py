@@ -8,3 +8,5 @@ from .packages import (
     is_triton_available,
 )
 from .wrapper import get_module_class_from_name
+from .safetensors import SafeTensorsWeightsManager
+from .hf_hub import download_repo
