@@ -1,9 +1,10 @@
-import os
+# Standard
 from typing import Tuple
+import os
 
+# Third Party
 from transformers import AutoConfig, AutoTokenizer
-from transformers.utils import (SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME,
-                                cached_file)
+from transformers.utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, cached_file
 from transformers.utils.hub import get_checkpoint_shard_files
 
 

@@ -1,7 +1,8 @@
+# Third Party
 from transformers import AutoConfig
 
-from .bigcode import (export_to_huggingface_bigcode,
-                      import_from_huggingface_bigcode)
+# Local
+from .bigcode import export_to_huggingface_bigcode, import_from_huggingface_bigcode
 from .llama import export_to_huggingface_llama, import_from_huggingface_llama
 
 _MODEL_IMPORT_FUNCTIONS = {

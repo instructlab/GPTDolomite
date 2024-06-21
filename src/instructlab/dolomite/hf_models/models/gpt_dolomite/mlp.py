@@ -1,7 +1,10 @@
+# Standard
 from typing import Tuple
 
+# Third Party
 import torch
 
+# Local
 from ...modeling_utils import Linear, get_activation_function, is_glu
 from .config import GPTDolomiteConfig
 

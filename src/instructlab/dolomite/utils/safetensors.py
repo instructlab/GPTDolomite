@@ -1,11 +1,16 @@
+# Standard
 import json
 import os
 
-import torch
+# Third Party
 from safetensors import safe_open
 from safetensors.torch import save_file
-from transformers.modeling_utils import (SAFE_WEIGHTS_INDEX_NAME,
-                                         SAFE_WEIGHTS_NAME, shard_checkpoint)
+from transformers.modeling_utils import (
+    SAFE_WEIGHTS_INDEX_NAME,
+    SAFE_WEIGHTS_NAME,
+    shard_checkpoint,
+)
+import torch
 
 
 class SafeTensorsWeightsManager:

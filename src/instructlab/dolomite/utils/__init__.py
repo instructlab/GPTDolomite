@@ -1,8 +1,10 @@
+# Local
 from .hf_hub import download_repo
 from .safetensors import SafeTensorsWeightsManager
 from .wrapper import get_module_class_from_name
 
 try:
+    # Third Party
     import flash_attn
 
     _IS_FLASH_ATTENTION_AVAILABLE = True

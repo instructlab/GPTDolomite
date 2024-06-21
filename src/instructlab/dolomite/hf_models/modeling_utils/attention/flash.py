@@ -1,6 +1,8 @@
-import torch
+# Third Party
 from transformers import DynamicCache
+import torch
 
+# Local
 from ....utils import is_flash_attention_available
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
@@ -8,10 +10,9 @@ from .base import Attention
 from .utils import get_unpad_data
 
 if is_flash_attention_available():
-    from flash_attn.bert_padding import (index_first_axis, pad_input,
-                                         unpad_input)
-    from flash_attn.flash_attn_interface import (flash_attn_func,
-                                                 flash_attn_varlen_func)
+    # Third Party
+    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
+    from flash_attn.flash_attn_interface import flash_attn_func, flash_attn_varlen_func
 
 
 class FlashAttention2(Attention):

@@ -1,5 +1,7 @@
+# Third Party
 from transformers import AutoConfig, AutoModel, AutoModelForCausalLM
 
+# Local
 from .models import GPTDolomiteConfig, GPTDolomiteForCausalLM, GPTDolomiteModel
 
 # (AutoConfig, AutoModel, AutoModelForCausalLM)

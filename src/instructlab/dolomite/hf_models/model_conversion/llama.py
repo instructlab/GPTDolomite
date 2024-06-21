@@ -1,13 +1,18 @@
-from transformers import (AutoConfig, AutoTokenizer, GenerationConfig,
-                          LlamaConfig)
+# Third Party
+from transformers import AutoConfig, AutoTokenizer, GenerationConfig, LlamaConfig
 
+# Local
 from ...utils import SafeTensorsWeightsManager, download_repo
 from ..enums import AttentionHeadType
-from ..modeling_utils import (interleave_query_key_value_tensor_for_attention,
-                              split_query_key_value_tensor_for_attention)
+from ..modeling_utils import (
+    interleave_query_key_value_tensor_for_attention,
+    split_query_key_value_tensor_for_attention,
+)
 from ..models import GPTDolomiteConfig
-from ..models.gpt_dolomite import (interleave_up_gate_tensor_for_mlp,
-                                   split_up_gate_tensor_for_mlp)
+from ..models.gpt_dolomite import (
+    interleave_up_gate_tensor_for_mlp,
+    split_up_gate_tensor_for_mlp,
+)
 
 
 def import_from_huggingface_llama(

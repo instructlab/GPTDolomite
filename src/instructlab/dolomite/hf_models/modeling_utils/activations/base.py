@@ -1,7 +1,9 @@
 # pylint: disable=consider-using-from-import
-import torch.nn as nn
+# Third Party
 from transformers.activations import ACT2CLS, ClassInstantier
+import torch.nn as nn
 
+# Local
 from .math_gelu import MathGELU
 
 _BASE_ACTIVATIONS = {

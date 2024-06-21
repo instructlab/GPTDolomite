@@ -1,10 +1,13 @@
+# Standard
 from typing import List, Optional, Tuple, Union
 
-import torch
-import torch.nn.functional as F
+# Third Party
 from transformers import DynamicCache
 from transformers.modeling_outputs import CausalLMOutputWithPast
+import torch
+import torch.nn.functional as F
 
+# Local
 from ...modeling_utils import Embedding, Linear
 from .base import GPTDolomiteModel, GPTDolomitePreTrainedModel
 from .config import GPTDolomiteConfig

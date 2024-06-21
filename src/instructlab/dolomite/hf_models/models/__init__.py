@@ -1,2 +1,2 @@
-from .gpt_dolomite import (GPTDolomiteConfig, GPTDolomiteForCausalLM,
-                           GPTDolomiteModel)
+# Local
+from .gpt_dolomite import GPTDolomiteConfig, GPTDolomiteForCausalLM, GPTDolomiteModel

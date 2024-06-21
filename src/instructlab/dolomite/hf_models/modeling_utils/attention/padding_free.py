@@ -1,14 +1,18 @@
+# Standard
 from typing import Tuple
 
-import torch
+# Third Party
 from transformers import DynamicCache
+import torch
 
+# Local
 from ....utils import is_flash_attention_available
 from ...enums import PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention
 
 if is_flash_attention_available():
+    # Third Party
     from flash_attn.flash_attn_interface import flash_attn_varlen_func
 
 

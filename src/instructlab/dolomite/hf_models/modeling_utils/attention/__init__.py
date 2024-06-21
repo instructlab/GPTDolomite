@@ -1,20 +1,27 @@
-import inspect
+# Standard
 from typing import Tuple
+import inspect
 
+# Third Party
 import torch
 
+# Local
 from ...config import CommonConfig
 from ...enums import AttentionHeadType
 from .base import Attention
 from .flash import FlashAttention2
 from .padding_free import PaddingFreeAttention
 from .sdpa import SDPA
-from .utils import (get_unpad_data, interleave_query_key_value_tensor_for_gqa,
-                    interleave_query_key_value_tensor_for_mha,
-                    interleave_query_key_value_tensor_for_mqa,
-                    repeat_key_value, split_query_key_value_tensor_for_gqa,
-                    split_query_key_value_tensor_for_mha,
-                    split_query_key_value_tensor_for_mqa)
+from .utils import (
+    get_unpad_data,
+    interleave_query_key_value_tensor_for_gqa,
+    interleave_query_key_value_tensor_for_mha,
+    interleave_query_key_value_tensor_for_mqa,
+    repeat_key_value,
+    split_query_key_value_tensor_for_gqa,
+    split_query_key_value_tensor_for_mha,
+    split_query_key_value_tensor_for_mqa,
+)
 
 _ATTENTION_MODULES = {
     "eager": Attention,

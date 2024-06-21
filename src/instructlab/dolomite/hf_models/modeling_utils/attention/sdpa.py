@@ -1,7 +1,9 @@
+# Third Party
+from transformers import DynamicCache
 import torch
 import torch.nn.functional as F
-from transformers import DynamicCache
 
+# Local
 from ...enums import PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention

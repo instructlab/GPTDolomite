@@ -1,8 +1,10 @@
+# Standard
 import shutil
 
-from transformers import (AutoConfig, AutoTokenizer, GenerationConfig,
-                          GPTBigCodeConfig)
+# Third Party
+from transformers import AutoConfig, AutoTokenizer, GenerationConfig, GPTBigCodeConfig
 
+# Local
 from ..enums import AttentionHeadType, PositionEmbeddingType
 from ..models import GPTDolomiteConfig
 

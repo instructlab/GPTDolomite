@@ -1,8 +1,11 @@
+# Standard
 from typing import Tuple, Union
 
-import torch
+# Third Party
 from transformers import DynamicCache
+import torch
 
+# Local
 from ...enums import AttentionHeadType
 from ...modeling_utils import get_attention_module, get_normalization_function
 from .config import GPTDolomiteConfig
