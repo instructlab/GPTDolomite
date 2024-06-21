@@ -2,7 +2,6 @@
 
 This repo contains code for IBM models, extracted from https://github.com/ibm-granite/dolomite-engine; all credit goes to the original authors:
 - mayank31398
-- kmehant 
 
 ## Extracted Models
 
