@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 # pylint: disable=consider-using-from-import
 # Third Party
 from transformers.activations import ACT2CLS, ClassInstantier

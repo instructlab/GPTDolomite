@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 # Standard
 from typing import Tuple, Union
 

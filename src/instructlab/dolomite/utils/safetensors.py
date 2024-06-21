@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 # Standard
 import json
 import os

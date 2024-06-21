@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 """Logic is copied from transformers.models.llama.modeling_utils with slight modifications"""
 
 # Standard

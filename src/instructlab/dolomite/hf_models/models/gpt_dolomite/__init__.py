@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 # Local
 from .base import GPTDolomiteModel, GPTDolomitePreTrainedModel
 from .config import GPTDolomiteConfig

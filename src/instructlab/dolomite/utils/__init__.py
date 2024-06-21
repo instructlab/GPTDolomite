@@ -1,3 +1,6 @@
+# ----------------------------------------------------------------
+# Extracted from https://github.com/ibm-granite/dolomite-engine
+# ----------------------------------------------------------------
 # Local
 from .hf_hub import download_repo
 from .safetensors import SafeTensorsWeightsManager
