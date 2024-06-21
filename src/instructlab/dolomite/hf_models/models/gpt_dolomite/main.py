@@ -139,6 +139,7 @@ class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
         #     position_ids -> None or (batch_size, key_length)
         # ==========================================================================================
 
+        # pylint: disable=duplicate-code
         transformer_outputs = self.transformer(
             input_ids,
             past_key_values=past_key_values,

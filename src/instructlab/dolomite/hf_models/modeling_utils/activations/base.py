@@ -1,3 +1,4 @@
+# pylint: disable=consider-using-from-import
 import torch.nn as nn
 from transformers.activations import ACT2CLS, ClassInstantier
 

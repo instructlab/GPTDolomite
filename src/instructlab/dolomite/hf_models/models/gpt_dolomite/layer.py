@@ -1,7 +1,6 @@
 from typing import Tuple, Union
 
 import torch
-import torch.nn as nn
 from transformers import DynamicCache
 
 from ...enums import AttentionHeadType
@@ -10,7 +9,7 @@ from .config import GPTDolomiteConfig
 from .mlp import MLP
 
 
-class GPTDolomiteBlock(nn.Module):
+class GPTDolomiteBlock(torch.nn.Module):
     """
     Layer implementation for the transformer block
     """

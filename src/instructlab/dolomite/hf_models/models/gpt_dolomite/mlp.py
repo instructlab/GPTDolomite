@@ -1,14 +1,12 @@
-import math
 from typing import Tuple
 
 import torch
-import torch.nn as nn
 
 from ...modeling_utils import Linear, get_activation_function, is_glu
 from .config import GPTDolomiteConfig
 
 
-class MLP(nn.Module):
+class MLP(torch.nn.Module):
     def __init__(self, config: GPTDolomiteConfig) -> None:
         super().__init__()
 
@@ -29,7 +27,7 @@ class MLP(nn.Module):
         self.c_proj = Linear(intermediate_size, hidden_size, bias=add_bias)
 
         self.dropout = (
-            nn.Identity() if residual_dropout == 0 else nn.Dropout(residual_dropout)
+            torch.nn.Identity() if residual_dropout == 0 else torch.nn.Dropout(residual_dropout)
         )
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:

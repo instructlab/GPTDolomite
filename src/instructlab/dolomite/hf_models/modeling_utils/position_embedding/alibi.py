@@ -3,10 +3,9 @@
 import math
 
 import torch
-import torch.nn as nn
 
 
-class Alibi(nn.Module):
+class Alibi(torch.nn.Module):
     def __init__(self, num_heads: int) -> None:
         super().__init__()
         self.num_heads = num_heads

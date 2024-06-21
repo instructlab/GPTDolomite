@@ -2,7 +2,6 @@ import warnings
 from typing import List, Tuple, Union
 
 import torch
-import torch.nn as nn
 from transformers import DynamicCache, PreTrainedModel
 from transformers.modeling_outputs import BaseModelOutputWithPast
 
@@ -71,8 +70,8 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
 
         self.upcast_logits_for_loss = config.upcast_logits_for_loss
 
-    def _init_weights(self, module: nn.Module) -> None:
-        if isinstance(module, (Embedding, Linear, nn.LayerNorm, RMSNorm, Alibi, RoPE)):
+    def _init_weights(self, module: torch.nn.Module) -> None:
+        if isinstance(module, (Embedding, Linear, torch.nn.LayerNorm, RMSNorm, Alibi, RoPE)):
             module.reset_parameters()
 
     def get_autoregressive_language_modeling_loss(
@@ -94,7 +93,7 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
             shift_labels = labels[..., 1:].contiguous().to(shift_logits.device)
 
         # Flatten the tokens
-        loss_fct = nn.CrossEntropyLoss()
+        loss_fct = torch.nn.CrossEntropyLoss()
         if self.upcast_logits_for_loss:
             shift_logits = shift_logits.float()
         loss = loss_fct(
@@ -223,9 +222,9 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         self.wte = Embedding(config.vocab_size, self.embed_dim)
 
         self.drop = (
-            nn.Identity() if config.embd_pdrop == 0 else nn.Dropout(config.embd_pdrop)
+            torch.nn.Identity() if config.embd_pdrop == 0 else torch.nn.Dropout(config.embd_pdrop)
         )
-        self.h = nn.ModuleList(
+        self.h = torch.nn.ModuleList(
             [
                 GPTDolomiteBlock(
                     config,
@@ -538,7 +537,7 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
             raise ValueError(
                 "You cannot specify both input_ids and inputs_embeds at the same time"
             )
-        elif input_ids is not None:
+        if input_ids is not None:
             input_shape = input_ids.size()
 
             # special handling for padding free transformer with list inputs

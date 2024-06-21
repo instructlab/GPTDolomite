@@ -1,14 +1,13 @@
 import numbers
 
 import torch
-import torch.nn as nn
 
 
-class RMSNorm(nn.Module):
+class RMSNorm(torch.nn.Module):
     def __init__(self, normalized_shape: int, eps: float = 1e-6) -> None:
         super().__init__()
 
-        self.weight = nn.Parameter(torch.ones(normalized_shape))
+        self.weight = torch.nn.Parameter(torch.ones(normalized_shape))
         self.eps = eps
 
         if isinstance(normalized_shape, numbers.Integral):
@@ -28,4 +27,4 @@ class RMSNorm(nn.Module):
         return f"{self.normalized_shape}, eps={self.eps}"
 
     def reset_parameters(self) -> None:
-        nn.init.ones_(self.weight)
+        torch.nn.init.ones_(self.weight)

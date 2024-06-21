@@ -52,8 +52,7 @@ class SafeTensorsWeightsManager:
         return len(self.tensor_filenames)
 
     def __iter__(self) -> str:
-        for tensor_name in self.tensor_filenames:
-            yield tensor_name
+        yield from self.tensor_filenames
 
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, SafeTensorsWeightsManager):
@@ -88,8 +87,9 @@ class SafeTensorsWeightsManager:
             )
 
         if index is not None:
-            json.dump(
-                index,
-                open(os.path.join(save_path, SAFE_WEIGHTS_INDEX_NAME), "w"),
-                indent=4,
-            )
+            with open(os.path.join(save_path, SAFE_WEIGHTS_INDEX_NAME), "w") as f:
+                json.dump(
+                    index,
+                    f,
+                    indent=4,
+                )

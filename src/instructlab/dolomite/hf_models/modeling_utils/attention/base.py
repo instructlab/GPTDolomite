@@ -1,8 +1,6 @@
-import math
 from typing import Tuple
 
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 from transformers import DynamicCache
 
@@ -13,7 +11,7 @@ from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 
 
-class Attention(nn.Module):
+class Attention(torch.nn.Module):
     def __init__(
         self, config: CommonConfig, causal: bool, layer_idx: int = None
     ) -> None:
@@ -86,10 +84,10 @@ class Attention(nn.Module):
         self.resid_pdrop = config.resid_pdrop
 
         self.attn_dropout = (
-            nn.Identity() if self.attn_pdrop == 0 else nn.Dropout(self.attn_pdrop)
+            torch.nn.Identity() if self.attn_pdrop == 0 else torch.nn.Dropout(self.attn_pdrop)
         )
         self.resid_dropout = (
-            nn.Identity() if self.resid_pdrop == 0 else nn.Dropout(self.resid_pdrop)
+            torch.nn.Identity() if self.resid_pdrop == 0 else torch.nn.Dropout(self.resid_pdrop)
         )
 
     def _prepare_qkv_for_forward(

@@ -1,5 +1,4 @@
-import torch.nn as nn
-
+import torch
 from .layernorm import get_layernorm
 from .rmsnorm import RMSNorm, get_rmsnorm
 
@@ -14,7 +13,7 @@ def get_normalization_function(
     normalized_shape: int,
     eps: float = 1e-5,
     normalization_implementation: str = "torch",
-) -> nn.LayerNorm:
+) -> torch.nn.LayerNorm:
     if name in _NORMALIZATION_FUNCTIONS:
         return _NORMALIZATION_FUNCTIONS[name](
             normalized_shape,

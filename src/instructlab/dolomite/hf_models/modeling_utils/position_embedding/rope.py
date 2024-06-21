@@ -4,10 +4,9 @@ import math
 from typing import Tuple
 
 import torch
-import torch.nn as nn
 
 
-class RoPE(nn.Module):
+class RoPE(torch.nn.Module):
     def __init__(
         self,
         head_dim: int,
@@ -81,7 +80,7 @@ class YaRNScaledRoPE(RoPE):
         beta_fast: int = 32,
         beta_slow: int = 1,
     ) -> None:
-        nn.Module.__init__(self)
+        torch.nn.Module.__init__(self)
 
         self.head_dim = head_dim
         self.max_position_embeddings = max_position_embeddings
@@ -122,6 +121,7 @@ class YaRNScaledRoPE(RoPE):
         )
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
+        # pylint: disable=no-value-for-parameter
         self._set_cos_sin_cache(
             self.max_position_embeddings, dtype=torch.get_default_dtype()
         )

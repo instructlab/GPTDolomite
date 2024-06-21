@@ -19,7 +19,7 @@ def download_repo(repo_name_or_path: str) -> Tuple[AutoConfig, AutoTokenizer, st
         try:
             model_path = cached_file(repo_name_or_path, SAFE_WEIGHTS_NAME)
             model_path = os.path.dirname(model_path)
-        except:
+        except: # pylint: disable=bare-except
             # try downloading model weights if they are sharded
             try:
                 sharded_filename = cached_file(
@@ -27,7 +27,7 @@ def download_repo(repo_name_or_path: str) -> Tuple[AutoConfig, AutoTokenizer, st
                 )
                 get_checkpoint_shard_files(repo_name_or_path, sharded_filename)
                 model_path = os.path.dirname(sharded_filename)
-            except:
+            except: # pylint: disable=bare-except
                 pass
 
     return config, tokenizer, model_path
@@ -36,7 +36,7 @@ def download_repo(repo_name_or_path: str) -> Tuple[AutoConfig, AutoTokenizer, st
 def _download_config(repo_name_or_path: str) -> AutoConfig:
     try:
         config = AutoConfig.from_pretrained(repo_name_or_path)
-    except:
+    except: # pylint: disable=bare-except
         config = None
 
     return config
@@ -45,7 +45,7 @@ def _download_config(repo_name_or_path: str) -> AutoConfig:
 def _download_tokenizer(repo_name_or_path: str) -> AutoTokenizer:
     try:
         tokenizer = AutoTokenizer.from_pretrained(repo_name_or_path)
-    except:
+    except: # pylint: disable=bare-except
         tokenizer = None
 
     return tokenizer

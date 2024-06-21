@@ -1,4 +1,4 @@
-import torch.nn as nn
+import torch
 
 from ..enums import GradientCheckpointingMethod
 from .block import block_checkpointing
@@ -9,7 +9,7 @@ _GRADIENT_CHECKPOINTING_METHODS = {
 
 
 def apply_gradient_checkpointing(
-    model: nn.Module,
+    model: torch.nn.Module,
     gradient_checkpointing_method: GradientCheckpointingMethod,
     **kwargs,
 ) -> None:
