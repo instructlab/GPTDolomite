@@ -4,8 +4,7 @@ from typing import Tuple
 import torch
 import torch.nn as nn
 
-from ...enums import InitMethod
-from ...modeling_utils import ParameterizedLinear, get_activation_function, is_glu
+from ...modeling_utils import Linear, get_activation_function, is_glu
 from .config import GPTDolomiteConfig
 
 
@@ -19,27 +18,15 @@ class MLP(nn.Module):
         add_bias = config.add_bias
         residual_dropout = config.resid_pdrop
 
-        init_method = InitMethod(config.init_method)
-        initializer_range = config.initializer_range
-        m_width = config.m_width
-        n_layer = config.n_layer
-
-        std = initializer_range
-        if init_method == InitMethod.mup:
-            std /= math.sqrt(m_width)
-        self.c_fc = ParameterizedLinear(
+        self.c_fc = Linear(
             hidden_size,
             2 * intermediate_size if is_glu(activation_function) else intermediate_size,
             bias=add_bias,
-            std=std,
         )
 
         self.act = get_activation_function(activation_function)
 
-        std = initializer_range / math.sqrt(2 * n_layer)
-        if init_method == InitMethod.mup:
-            std /= math.sqrt(m_width)
-        self.c_proj = ParameterizedLinear(intermediate_size, hidden_size, bias=add_bias, std=std)
+        self.c_proj = Linear(intermediate_size, hidden_size, bias=add_bias)
 
         self.dropout = nn.Identity() if residual_dropout == 0 else nn.Dropout(residual_dropout)
 

@@ -7,8 +7,8 @@ import torch.nn.functional as F
 from transformers import DynamicCache
 
 from ...config import CommonConfig
-from ...enums import AttentionHeadType, InitMethod, PositionEmbeddingType
-from ..linear import ParameterizedLinear
+from ...enums import AttentionHeadType, PositionEmbeddingType
+from ..linear import Linear
 from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 
@@ -22,11 +22,6 @@ class Attention(nn.Module):
         self.num_heads = config.n_head
         self.num_key_value_heads = config.num_key_value_heads
         self.add_bias = config.add_bias
-
-        initializer_range = config.initializer_range
-        m_width = config.m_width
-        n_layer = config.n_layer
-        init_method = InitMethod(config.init_method)
 
         assert (
             self.hidden_size % self.num_heads == 0
@@ -71,20 +66,13 @@ class Attention(nn.Module):
 
         # note that the actual layout is different for the output and depends on whether we are using MHA, MQA or GQA
         # (self.hidden_size + 2 * self.num_key_value_heads * self.head_dim) is just the actual number output features
-        std = initializer_range
-        if init_method == InitMethod.mup:
-            std /= math.sqrt(m_width)
-        self.c_attn = ParameterizedLinear(
+        self.c_attn = Linear(
             self.hidden_size,
             self.hidden_size + 2 * self.num_key_value_heads * self.head_dim,
             bias=self.add_bias,
-            std=std,
         )
 
-        std = initializer_range / math.sqrt(2 * n_layer)
-        if init_method == InitMethod.mup:
-            std /= math.sqrt(m_width)
-        self.c_proj = ParameterizedLinear(self.hidden_size, self.hidden_size, bias=self.add_bias, std=std)
+        self.c_proj = Linear(self.hidden_size, self.hidden_size, bias=self.add_bias)
 
         self.attn_pdrop = config.attn_pdrop
         self.resid_pdrop = config.resid_pdrop

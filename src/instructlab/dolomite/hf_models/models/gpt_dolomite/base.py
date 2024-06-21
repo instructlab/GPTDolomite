@@ -10,8 +10,8 @@ from ...defaults import DEFAULT_NORMALIZATION_IMPLEMENTATION
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ...modeling_utils import (
     Alibi,
-    ParameterizedEmbedding,
-    ParameterizedLinear,
+    Embedding,
+    Linear,
     RMSNorm,
     RoPE,
     YaRNScaledRoPE,
@@ -73,7 +73,7 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
         self.upcast_logits_for_loss = config.upcast_logits_for_loss
 
     def _init_weights(self, module: nn.Module) -> None:
-        if isinstance(module, (ParameterizedEmbedding, ParameterizedLinear, nn.LayerNorm, RMSNorm, Alibi, RoPE)):
+        if isinstance(module, (Embedding, Linear, nn.LayerNorm, RMSNorm, Alibi, RoPE)):
             module.reset_parameters()
 
     def get_autoregressive_language_modeling_loss(
@@ -185,7 +185,6 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         self.num_heads = config.num_attention_heads
         self.num_key_value_heads = config.num_key_value_heads
         self.m_emb = config.m_emb
-        self.initializer_range = config.initializer_range
 
         assert (
             self.embed_dim % self.num_heads == 0
@@ -193,7 +192,7 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
 
         self.head_dim = self.embed_dim // self.num_heads
 
-        self.wte = ParameterizedEmbedding(config.vocab_size, self.embed_dim, std=self.initializer_range)
+        self.wte = Embedding(config.vocab_size, self.embed_dim)
 
         self.drop = nn.Identity() if config.embd_pdrop == 0 else nn.Dropout(config.embd_pdrop)
         self.h = nn.ModuleList(
@@ -221,10 +220,10 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    def get_input_embeddings(self) -> ParameterizedEmbedding:
+    def get_input_embeddings(self) -> Embedding:
         return self.wte
 
-    def set_input_embeddings(self, new_embeddings: ParameterizedEmbedding) -> None:
+    def set_input_embeddings(self, new_embeddings: Embedding) -> None:
         self.wte = new_embeddings
 
     def forward(
@@ -605,7 +604,7 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         max_position_embeddings = self.config.max_position_embeddings
 
         if self.position_embedding_type == PositionEmbeddingType.learned_absolute:
-            self.wpe = ParameterizedEmbedding(max_position_embeddings, self.embed_dim, std=self.initializer_range)
+            self.wpe = Embedding(max_position_embeddings, self.embed_dim)
         elif self.position_embedding_type == PositionEmbeddingType.alibi:
             assert not self._use_flash_attention_2, "alibi is not implemented with FlashAttention"
 

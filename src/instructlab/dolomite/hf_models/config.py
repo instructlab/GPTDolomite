@@ -1,6 +1,6 @@
 from transformers import PretrainedConfig
 
-from .enums import AttentionHeadType, InitMethod, PositionEmbeddingType
+from .enums import AttentionHeadType, PositionEmbeddingType
 
 
 class CommonConfig(PretrainedConfig):
@@ -11,6 +11,9 @@ class CommonConfig(PretrainedConfig):
         "num_attention_heads": "n_head",
         "num_hidden_layers": "n_layer",
     }
+
+    # NOTE: initializer range is kept for backward compatiblity
+    #       but it is not used anymore
 
     def __init__(
         self,
@@ -28,7 +31,7 @@ class CommonConfig(PretrainedConfig):
         attn_pdrop: float = 0.1,
         normalization_function: str = "layernorm",
         layer_norm_epsilon: float = 1e-5,
-        initializer_range: float = 0.02,
+        initializer_range: float = 0.02, 
         scale_attn_weights: bool = True,
         attention_multiplier: float = None,
         use_cache: bool = True,
@@ -82,7 +85,6 @@ class CommonConfig(PretrainedConfig):
             assert self.scale_attn_weights
 
         # check if enums are valid
-        init_method = InitMethod(init_method)
         attention_head_type = AttentionHeadType(attention_head_type)
         position_embedding_type = PositionEmbeddingType(position_embedding_type)
 
