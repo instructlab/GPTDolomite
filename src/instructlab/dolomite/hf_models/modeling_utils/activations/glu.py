@@ -3,7 +3,6 @@ import torch.nn as nn
 
 from .base import get_base_activation
 
-
 _GLU_BASE_MAPPING = {
     "ceglu": "celu",
     "eglu": "elu",

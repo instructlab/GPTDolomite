@@ -6,7 +6,6 @@ import torch.distributed
 # from .parallel import ProcessGroupManager, run_rank_n
 from .parallel import run_rank_n
 
-
 _LOGGER: logging.Logger = None
 
 
@@ -16,13 +15,23 @@ def set_logger(level: int = logging.INFO, colored_log: bool = False) -> None:
     if colored_log:
         from .packages import is_colorlog_available
 
-        assert is_colorlog_available(), "pip package colorlog is needed for colored logging"
+        assert (
+            is_colorlog_available()
+        ), "pip package colorlog is needed for colored logging"
         from colorlog import ColoredFormatter
 
-        stream.setFormatter(ColoredFormatter("%(asctime)s - %(log_color)s[%(levelname)-8s] ▶%(reset)s %(message)s"))
+        stream.setFormatter(
+            ColoredFormatter(
+                "%(asctime)s - %(log_color)s[%(levelname)-8s] ▶%(reset)s %(message)s"
+            )
+        )
         logging.basicConfig(level=level, handlers=[stream])
     else:
-        logging.basicConfig(level=level, handlers=[stream], format="%(asctime)s - [%(levelname)-8s] ▶ %(message)s")
+        logging.basicConfig(
+            level=level,
+            handlers=[stream],
+            format="%(asctime)s - [%(levelname)-8s] ▶ %(message)s",
+        )
 
     global _LOGGER
     _LOGGER = run_rank_n(logging.getLogger)()

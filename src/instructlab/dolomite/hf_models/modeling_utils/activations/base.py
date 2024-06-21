@@ -3,7 +3,6 @@ from transformers.activations import ACT2CLS, ClassInstantier
 
 from .math_gelu import MathGELU
 
-
 _BASE_ACTIVATIONS = {
     "celu": nn.modules.CELU,
     "elu": nn.modules.ELU,

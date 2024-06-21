@@ -1,6 +1,5 @@
 from .logger import warn_rank_0
 
-
 try:
     import apex
 

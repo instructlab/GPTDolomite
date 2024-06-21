@@ -1,6 +1,7 @@
-
 from typing import Callable
+
 import torch
+
 
 def run_rank_n(func: Callable, rank: int = 0, barrier: bool = False) -> Callable:
     """wraps a function to run on a single rank, returns a no-op for other ranks

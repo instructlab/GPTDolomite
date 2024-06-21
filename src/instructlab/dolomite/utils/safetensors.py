@@ -4,7 +4,8 @@ import os
 import torch
 from safetensors import safe_open
 from safetensors.torch import save_file
-from transformers.modeling_utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, shard_checkpoint
+from transformers.modeling_utils import (SAFE_WEIGHTS_INDEX_NAME,
+                                         SAFE_WEIGHTS_NAME, shard_checkpoint)
 
 
 class SafeTensorsWeightsManager:
@@ -31,7 +32,9 @@ class SafeTensorsWeightsManager:
         f = self.file_handles[filename]
         return f.get_slice(tensor_name)
 
-    def get_tensor(self, tensor_name: str, dtype: torch.dtype = None, device: torch.device = None) -> torch.Tensor:
+    def get_tensor(
+        self, tensor_name: str, dtype: torch.dtype = None, device: torch.device = None
+    ) -> torch.Tensor:
         filename = self.tensor_filenames[tensor_name]
         f = self.file_handles[filename]
         tensor = f.get_tensor(tensor_name)
@@ -75,10 +78,18 @@ class SafeTensorsWeightsManager:
     def save_state_dict(state_dict: dict, save_path: str) -> None:
         os.makedirs(save_path)
 
-        shards, index = shard_checkpoint(state_dict, max_shard_size="5GB", weights_name=SAFE_WEIGHTS_NAME)
+        shards, index = shard_checkpoint(
+            state_dict, max_shard_size="5GB", weights_name=SAFE_WEIGHTS_NAME
+        )
 
         for shard_file, shard in shards.items():
-            save_file(shard, os.path.join(save_path, shard_file), metadata={"format": "pt"})
+            save_file(
+                shard, os.path.join(save_path, shard_file), metadata={"format": "pt"}
+            )
 
         if index is not None:
-            json.dump(index, open(os.path.join(save_path, SAFE_WEIGHTS_INDEX_NAME), "w"), indent=4)
+            json.dump(
+                index,
+                open(os.path.join(save_path, SAFE_WEIGHTS_INDEX_NAME), "w"),
+                indent=4,
+            )

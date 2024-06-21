@@ -28,7 +28,9 @@ class MLP(nn.Module):
 
         self.c_proj = Linear(intermediate_size, hidden_size, bias=add_bias)
 
-        self.dropout = nn.Identity() if residual_dropout == 0 else nn.Dropout(residual_dropout)
+        self.dropout = (
+            nn.Identity() if residual_dropout == 0 else nn.Dropout(residual_dropout)
+        )
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.c_fc(hidden_states)
@@ -38,9 +40,13 @@ class MLP(nn.Module):
         return hidden_states
 
 
-def interleave_up_gate_tensor_for_mlp(up_weight: torch.Tensor, gate_weight: torch.Tensor) -> torch.Tensor:
+def interleave_up_gate_tensor_for_mlp(
+    up_weight: torch.Tensor, gate_weight: torch.Tensor
+) -> torch.Tensor:
     return torch.cat([up_weight, gate_weight])
 
 
-def split_up_gate_tensor_for_mlp(c_fc_weight: torch.Tensor) -> Tuple[torch.Tensor, torch.Tensor]:
+def split_up_gate_tensor_for_mlp(
+    c_fc_weight: torch.Tensor,
+) -> Tuple[torch.Tensor, torch.Tensor]:
     return c_fc_weight.chunk(2)

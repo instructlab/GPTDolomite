@@ -9,17 +9,12 @@ from .base import Attention
 from .flash import FlashAttention2
 from .padding_free import PaddingFreeAttention
 from .sdpa import SDPA
-from .utils import (
-    get_unpad_data,
-    interleave_query_key_value_tensor_for_gqa,
-    interleave_query_key_value_tensor_for_mha,
-    interleave_query_key_value_tensor_for_mqa,
-    repeat_key_value,
-    split_query_key_value_tensor_for_gqa,
-    split_query_key_value_tensor_for_mha,
-    split_query_key_value_tensor_for_mqa,
-)
-
+from .utils import (get_unpad_data, interleave_query_key_value_tensor_for_gqa,
+                    interleave_query_key_value_tensor_for_mha,
+                    interleave_query_key_value_tensor_for_mqa,
+                    repeat_key_value, split_query_key_value_tensor_for_gqa,
+                    split_query_key_value_tensor_for_mha,
+                    split_query_key_value_tensor_for_mqa)
 
 _ATTENTION_MODULES = {
     "eager": Attention,
@@ -71,7 +66,9 @@ def interleave_query_key_value_tensor_for_attention(
 ) -> torch.Tensor:
     if attention_head_type.value in _INTERLEAVE_FUNCTIONS:
         interleave_function = _INTERLEAVE_FUNCTIONS[attention_head_type.value]
-        interleave_function_parameters = inspect.signature(interleave_function).parameters.keys()
+        interleave_function_parameters = inspect.signature(
+            interleave_function
+        ).parameters.keys()
 
         parameters_to_pass = {}
         this_function_parameters = locals()

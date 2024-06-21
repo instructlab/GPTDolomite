@@ -8,7 +8,6 @@ from ...enums import PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention
 
-
 if is_flash_attention_available():
     from flash_attn.flash_attn_interface import flash_attn_varlen_func
 
@@ -96,7 +95,12 @@ class PaddingFreeAttention(Attention):
         hidden_states = hidden_states.view(total_q, self.num_key_value_heads, -1)
 
         query, key, value = hidden_states.split(
-            ((self.num_heads // self.num_key_value_heads) * self.head_dim, self.head_dim, self.head_dim), dim=-1
+            (
+                (self.num_heads // self.num_key_value_heads) * self.head_dim,
+                self.head_dim,
+                self.head_dim,
+            ),
+            dim=-1,
         )
 
         # this needs to be a reshape instead of view sadly
@@ -109,7 +113,9 @@ class PaddingFreeAttention(Attention):
     ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         total_q = hidden_states.shape[0]
 
-        query, key, value = hidden_states.split((self.hidden_size, self.head_dim, self.head_dim), dim=-1)
+        query, key, value = hidden_states.split(
+            (self.hidden_size, self.head_dim, self.head_dim), dim=-1
+        )
 
         query = query.view(total_q, self.num_heads, -1)
         key = key.unsqueeze(1)

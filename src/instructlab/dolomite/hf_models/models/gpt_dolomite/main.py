@@ -18,9 +18,7 @@ class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
         self.transformer = GPTDolomiteModel(config, **kwargs)
 
         if not self._tied_word_embeddings:
-            self.lm_head = Linear(
-                config.n_embd, config.vocab_size, bias=False
-            )
+            self.lm_head = Linear(config.n_embd, config.vocab_size, bias=False)
 
         self.m_width = config.m_width
 
@@ -110,20 +108,24 @@ class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
         cu_seqlens: torch.Tensor = None,
         max_seqlen: torch.Tensor = None,
     ) -> Union[Tuple, CausalLMOutputWithPast]:
-        return_dict = return_dict if return_dict is not None else self.config.use_return_dict
+        return_dict = (
+            return_dict if return_dict is not None else self.config.use_return_dict
+        )
 
-        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = self.prepare_inputs_for_model(
-            input_ids=input_ids,
-            inputs_embeds=inputs_embeds,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids,
-            labels=labels,
-            cu_seqlens=cu_seqlens,
-            max_seqlen=max_seqlen,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
+        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = (
+            self.prepare_inputs_for_model(
+                input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
+                position_ids=position_ids,
+                token_type_ids=token_type_ids,
+                labels=labels,
+                cu_seqlens=cu_seqlens,
+                max_seqlen=max_seqlen,
+                past_key_values=past_key_values,
+                attention_mask=attention_mask,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+            )
         )
 
         # ==========================================================================================
@@ -161,7 +163,9 @@ class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
         if self.m_width is not None:
             lm_logits = lm_logits / self.m_width
 
-        loss = self.get_autoregressive_language_modeling_loss(lm_logits, labels, cu_seqlens)
+        loss = self.get_autoregressive_language_modeling_loss(
+            lm_logits, labels, cu_seqlens
+        )
 
         if not return_dict:
             output = (lm_logits,) + transformer_outputs[1:]

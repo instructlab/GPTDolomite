@@ -1,3 +1,1 @@
-from .hf_models import (
-    GPTDolomiteConfig, GPTDolomiteModel
-)
+from .hf_models import GPTDolomiteConfig, GPTDolomiteModel

@@ -9,7 +9,9 @@ def _gelu_forward(x: torch.Tensor) -> torch.Tensor:
 @torch.compile
 def _gelu_backward(gradient: torch.Tensor, x: torch.Tensor) -> torch.Tensor:
     tanh_out = torch.tanh(0.79788456 * x * (1 + 0.044715 * x * x))
-    ff = 0.5 * x * ((1 - tanh_out * tanh_out) * (0.79788456 + 0.1070322243 * x * x)) + 0.5 * (1 + tanh_out)
+    ff = 0.5 * x * (
+        (1 - tanh_out * tanh_out) * (0.79788456 + 0.1070322243 * x * x)
+    ) + 0.5 * (1 + tanh_out)
     return ff * gradient
 
 

@@ -71,7 +71,9 @@ class SDPA(Attention):
 
         batch_size = attn_output.shape[0]
         attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(batch_size, -1, self.num_heads * self.head_dim)
+        attn_output = attn_output.reshape(
+            batch_size, -1, self.num_heads * self.head_dim
+        )
 
         # ==========================================================================================
         # attn_output -> (batch_size, query_length, num_heads * head_dim)

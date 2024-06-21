@@ -7,10 +7,11 @@ from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention
 from .utils import get_unpad_data
 
-
 if is_flash_attention_available():
-    from flash_attn.bert_padding import index_first_axis, pad_input, unpad_input
-    from flash_attn.flash_attn_interface import flash_attn_func, flash_attn_varlen_func
+    from flash_attn.bert_padding import (index_first_axis, pad_input,
+                                         unpad_input)
+    from flash_attn.flash_attn_interface import (flash_attn_func,
+                                                 flash_attn_varlen_func)
 
 
 class FlashAttention2(Attention):
@@ -70,7 +71,12 @@ class FlashAttention2(Attention):
 
         if attention_mask is None:
             attn_output = flash_attn_func(
-                query, key, value, dropout_p=dropout_p, softmax_scale=softmax_scale, causal=self.causal
+                query,
+                key,
+                value,
+                dropout_p=dropout_p,
+                softmax_scale=softmax_scale,
+                causal=self.causal,
             )
         else:
             key_length = key.shape[1]
@@ -78,15 +84,24 @@ class FlashAttention2(Attention):
             indices_k, cu_seqlens_k, max_seqlen_k = get_unpad_data(attention_mask)
 
             key = index_first_axis(
-                key.reshape(batch_size * key_length, self.num_key_value_heads, self.head_dim), indices_k
+                key.reshape(
+                    batch_size * key_length, self.num_key_value_heads, self.head_dim
+                ),
+                indices_k,
             )
             value = index_first_axis(
-                value.reshape(batch_size * key_length, self.num_key_value_heads, self.head_dim), indices_k
+                value.reshape(
+                    batch_size * key_length, self.num_key_value_heads, self.head_dim
+                ),
+                indices_k,
             )
 
             if query_length == key_length:
                 query = index_first_axis(
-                    query.reshape(batch_size * key_length, self.num_heads, self.head_dim), indices_k
+                    query.reshape(
+                        batch_size * key_length, self.num_heads, self.head_dim
+                    ),
+                    indices_k,
                 )
                 cu_seqlens_q = cu_seqlens_k
                 max_seqlen_q = max_seqlen_k
@@ -101,7 +116,9 @@ class FlashAttention2(Attention):
             else:
                 # The -q_len: slice assumes left padding.
                 attention_mask = attention_mask[:, -query_length:]
-                query, indices_q, cu_seqlens_q, max_seqlen_q = unpad_input(query, attention_mask)
+                query, indices_q, cu_seqlens_q, max_seqlen_q = unpad_input(
+                    query, attention_mask
+                )
 
             # ==========================================================================================
             # query -> (total_q, num_heads, head_dim)

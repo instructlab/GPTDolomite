@@ -38,7 +38,11 @@ class GPTDolomiteBlock(nn.Module):
             normalization_implementation=normalization_implementation,
         )
         self.attn = get_attention_module(
-            config, True, attention_implementation, use_padding_free_transformer, layer_idx
+            config,
+            True,
+            attention_implementation,
+            use_padding_free_transformer,
+            layer_idx,
         )
         self.ln_2 = get_normalization_function(
             config.normalization_function,
@@ -57,7 +61,9 @@ class GPTDolomiteBlock(nn.Module):
         cu_seqlens: torch.Tensor = None,
         max_seqlen: torch.Tensor = None,
     ) -> Union[
-        Tuple[torch.Tensor], Tuple[torch.Tensor, torch.Tensor], Tuple[torch.Tensor, torch.Tensor, torch.Tensor]
+        Tuple[torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor],
+        Tuple[torch.Tensor, torch.Tensor, torch.Tensor],
     ]:
         residual = hidden_states
         hidden_states = self.ln_1(hidden_states)
