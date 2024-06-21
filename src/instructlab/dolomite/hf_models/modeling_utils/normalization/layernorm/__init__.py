@@ -1,13 +1,8 @@
 import torch.nn as nn
 
-from .apex import ApexLayerNorm
-from .apex_persistent import ApexPersistentLayerNorm
-
 
 _LAYERNORM_MODULES = {
     "torch": nn.LayerNorm,
-    "apex": ApexLayerNorm,
-    "apex_persistent": ApexPersistentLayerNorm,
 }
 
 
