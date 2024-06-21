@@ -22,7 +22,7 @@ def import_from_huggingface_bigcode(
     try:
         tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
         tokenizer.save_pretrained(save_path, legacy_format=False)
-    except: # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
         pass
 
 
@@ -72,7 +72,7 @@ def export_to_huggingface_bigcode(
     try:
         tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
         tokenizer.save_pretrained(save_path, legacy_format=False)
-    except: # pylint: disable=bare-except
+    except:  # pylint: disable=bare-except
         pass
 
 

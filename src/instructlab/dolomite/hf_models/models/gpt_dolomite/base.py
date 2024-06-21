@@ -71,7 +71,9 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
         self.upcast_logits_for_loss = config.upcast_logits_for_loss
 
     def _init_weights(self, module: torch.nn.Module) -> None:
-        if isinstance(module, (Embedding, Linear, torch.nn.LayerNorm, RMSNorm, Alibi, RoPE)):
+        if isinstance(
+            module, (Embedding, Linear, torch.nn.LayerNorm, RMSNorm, Alibi, RoPE)
+        ):
             module.reset_parameters()
 
     def get_autoregressive_language_modeling_loss(
@@ -222,7 +224,9 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         self.wte = Embedding(config.vocab_size, self.embed_dim)
 
         self.drop = (
-            torch.nn.Identity() if config.embd_pdrop == 0 else torch.nn.Dropout(config.embd_pdrop)
+            torch.nn.Identity()
+            if config.embd_pdrop == 0
+            else torch.nn.Dropout(config.embd_pdrop)
         )
         self.h = torch.nn.ModuleList(
             [

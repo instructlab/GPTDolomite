@@ -84,10 +84,14 @@ class Attention(torch.nn.Module):
         self.resid_pdrop = config.resid_pdrop
 
         self.attn_dropout = (
-            torch.nn.Identity() if self.attn_pdrop == 0 else torch.nn.Dropout(self.attn_pdrop)
+            torch.nn.Identity()
+            if self.attn_pdrop == 0
+            else torch.nn.Dropout(self.attn_pdrop)
         )
         self.resid_dropout = (
-            torch.nn.Identity() if self.resid_pdrop == 0 else torch.nn.Dropout(self.resid_pdrop)
+            torch.nn.Identity()
+            if self.resid_pdrop == 0
+            else torch.nn.Dropout(self.resid_pdrop)
         )
 
     def _prepare_qkv_for_forward(

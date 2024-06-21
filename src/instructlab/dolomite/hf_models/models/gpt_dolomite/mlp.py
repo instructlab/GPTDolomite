@@ -27,7 +27,9 @@ class MLP(torch.nn.Module):
         self.c_proj = Linear(intermediate_size, hidden_size, bias=add_bias)
 
         self.dropout = (
-            torch.nn.Identity() if residual_dropout == 0 else torch.nn.Dropout(residual_dropout)
+            torch.nn.Identity()
+            if residual_dropout == 0
+            else torch.nn.Dropout(residual_dropout)
         )
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
