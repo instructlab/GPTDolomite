@@ -8,7 +8,7 @@ from typing import Tuple
 import torch
 
 # Local
-from ...modeling_utils import Linear, get_activation_function, is_glu
+from ...modeling_utils import get_activation_function, is_glu
 from .config import GPTDolomiteConfig
 
 
@@ -22,7 +22,7 @@ class MLP(torch.nn.Module):
         add_bias = config.add_bias
         residual_dropout = config.resid_pdrop
 
-        self.c_fc = Linear(
+        self.c_fc = torch.nn.Linear(
             hidden_size,
             2 * intermediate_size if is_glu(activation_function) else intermediate_size,
             bias=add_bias,
@@ -30,7 +30,7 @@ class MLP(torch.nn.Module):
 
         self.act = get_activation_function(activation_function)
 
-        self.c_proj = Linear(intermediate_size, hidden_size, bias=add_bias)
+        self.c_proj = torch.nn.Linear(intermediate_size, hidden_size, bias=add_bias)
 
         self.dropout = (
             torch.nn.Identity()

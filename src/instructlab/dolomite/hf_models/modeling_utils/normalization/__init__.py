@@ -5,14 +5,12 @@
 import torch
 
 # Local
-from .layernorm import get_layernorm
-from .rmsnorm import RMSNorm, get_rmsnorm
+from .norms import RMSNorm, get_layernorm, get_rmsnorm
 
 _NORMALIZATION_FUNCTIONS = {
     "layernorm": get_layernorm,
     "rmsnorm": get_rmsnorm,
 }
-
 
 def get_normalization_function(
     name: str,
@@ -30,3 +28,4 @@ def get_normalization_function(
     raise ValueError(
         f"unexpected `normalization_implementation` {normalization_implementation}"
     )
+

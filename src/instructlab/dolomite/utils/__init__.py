@@ -4,7 +4,6 @@
 # Local
 from .hf_hub import download_repo
 from .safetensors import SafeTensorsWeightsManager
-from .wrapper import get_module_class_from_name
 
 try:
     # Third Party

@@ -9,7 +9,7 @@ import inspect
 import torch
 
 # Local
-from ...config import CommonConfig
+from ...models.gpt_dolomite.config import GPTDolomiteConfig
 from ...enums import AttentionHeadType
 from .base import Attention
 from .flash import FlashAttention2
@@ -48,7 +48,7 @@ _SPLIT_FUNCTIONS = {
 
 
 def get_attention_module(
-    config: CommonConfig,
+    config: GPTDolomiteConfig,
     causal: bool,
     attention_implementation: str,
     use_padding_free_transformer: bool,
