@@ -58,7 +58,6 @@ include = [
     "instructlab.dolomite.hf_models.modeling_utils.normalization.layernorm",
     "instructlab.dolomite.hf_models.modeling_utils.normalization.rmsnorm",
     "instructlab.dolomite.hf_models.modeling_utils.position_embedding",
-    "instructlab.dolomite.gradient_checkpointing",
     "instructlab.dolomite.utils",
 ]
 
