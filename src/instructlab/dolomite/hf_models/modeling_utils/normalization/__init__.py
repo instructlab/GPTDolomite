@@ -5,8 +5,7 @@
 import torch
 
 # Local
-from .layernorm import get_layernorm
-from .rmsnorm import RMSNorm, get_rmsnorm
+from .norms import RMSNorm, get_layernorm, get_rmsnorm
 
 _NORMALIZATION_FUNCTIONS = {
     "layernorm": get_layernorm,

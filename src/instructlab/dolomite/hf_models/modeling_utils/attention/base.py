@@ -5,21 +5,21 @@
 from typing import Tuple
 
 # Third Party
+from torch.nn import Linear  # replaces ParameterizedLinear
 from transformers import DynamicCache
 import torch
 import torch.nn.functional as F
 
 # Local
-from ...config import CommonConfig
+from ...config import GPTDolomiteConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
-from ..linear import Linear
 from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 
 
 class Attention(torch.nn.Module):
     def __init__(
-        self, config: CommonConfig, causal: bool, layer_idx: int = None
+        self, config: GPTDolomiteConfig, causal: bool, layer_idx: int = None
     ) -> None:
         super().__init__()
 

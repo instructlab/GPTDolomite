@@ -11,20 +11,13 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 import torch
 
 # Local
-from ...defaults import DEFAULT_NORMALIZATION_IMPLEMENTATION
+from ...config import GPTDolomiteConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
-from ...modeling_utils import (
-    Alibi,
-    Embedding,
-    Linear,
-    RMSNorm,
-    RoPE,
-    YaRNScaledRoPE,
-    get_normalization_function,
-)
+from ...modeling_utils import Alibi, RMSNorm, RoPE, get_normalization_function
 from ...utils import check_list_type, flatten_and_convert_to_tensors
-from .config import GPTDolomiteConfig
 from .layer import GPTDolomiteBlock
+
+DEFAULT_NORMALIZATION_IMPLEMENTATION = "torch"
 
 
 class GPTDolomitePreTrainedModel(PreTrainedModel):
@@ -85,7 +78,15 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
 
     def _init_weights(self, module: torch.nn.Module) -> None:
         if isinstance(
-            module, (Embedding, Linear, torch.nn.LayerNorm, RMSNorm, Alibi, RoPE)
+            module,
+            (
+                torch.nn.Embedding,
+                torch.nn.Linear,
+                torch.nn.LayerNorm,
+                RMSNorm,
+                Alibi,
+                RoPE,
+            ),
         ):
             module.reset_parameters()
 
@@ -234,7 +235,7 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
 
         self.head_dim = self.embed_dim // self.num_heads
 
-        self.wte = Embedding(config.vocab_size, self.embed_dim)
+        self.wte = torch.nn.Embedding(config.vocab_size, self.embed_dim)
 
         self.drop = (
             torch.nn.Identity()
@@ -268,10 +269,10 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         # Initialize weights and apply final processing
         self.post_init()
 
-    def get_input_embeddings(self) -> Embedding:
+    def get_input_embeddings(self) -> torch.nn.Embedding:
         return self.wte
 
-    def set_input_embeddings(self, new_embeddings: Embedding) -> None:
+    def set_input_embeddings(self, new_embeddings: torch.nn.Embedding) -> None:
         self.wte = new_embeddings
 
     def forward(
@@ -709,7 +710,7 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
         max_position_embeddings = self.config.max_position_embeddings
 
         if self.position_embedding_type == PositionEmbeddingType.learned_absolute:
-            self.wpe = Embedding(max_position_embeddings, self.embed_dim)
+            self.wpe = torch.nn.Embedding(max_position_embeddings, self.embed_dim)
         elif self.position_embedding_type == PositionEmbeddingType.alibi:
             assert (
                 not self._use_flash_attention_2
@@ -717,22 +718,11 @@ class GPTDolomiteModel(GPTDolomitePreTrainedModel):
 
             self.alibi = Alibi(self.num_heads)
         elif self.position_embedding_type == PositionEmbeddingType.rope:
-            if self.config.rope_scaling is None:
-                self.rope = RoPE(
-                    self.head_dim,
-                    max_position_embeddings=max_position_embeddings,
-                    base=self.config.rope_theta,
-                )
-            else:
-                self.rope = YaRNScaledRoPE(
-                    self.head_dim,
-                    max_position_embeddings=max_position_embeddings,
-                    base=self.config.rope_theta,
-                    scale=self.config.rope_scaling["factor"],
-                    original_max_position_embeddings=self.config.rope_scaling[
-                        "original_max_position_embeddings"
-                    ],
-                )
+            self.rope = RoPE(
+                self.head_dim,
+                max_position_embeddings=max_position_embeddings,
+                base=self.config.rope_theta,
+            )
         else:
             raise NotImplementedError()
 

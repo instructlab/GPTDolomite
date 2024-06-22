@@ -8,7 +8,8 @@ from transformers import PretrainedConfig
 from .enums import AttentionHeadType, PositionEmbeddingType
 
 
-class CommonConfig(PretrainedConfig):
+class GPTDolomiteConfig(PretrainedConfig):
+    model_type = "gpt_dolomite"
     keys_to_ignore_at_inference = ["past_key_values"]
     attribute_map = {
         "hidden_size": "n_embd",
@@ -19,6 +20,8 @@ class CommonConfig(PretrainedConfig):
 
     # NOTE: initializer range is kept for backward compatiblity
     #       but it is not used anymore
+    #     : also rope_scaling is not used anymore but kept for
+    #       same reason.
 
     def __init__(
         self,

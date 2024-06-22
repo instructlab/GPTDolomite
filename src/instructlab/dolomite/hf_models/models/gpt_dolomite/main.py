@@ -11,9 +11,8 @@ import torch
 import torch.nn.functional as F
 
 # Local
-from ...modeling_utils import Embedding, Linear
+from ...config import GPTDolomiteConfig
 from .base import GPTDolomiteModel, GPTDolomitePreTrainedModel
-from .config import GPTDolomiteConfig
 
 
 class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
@@ -24,24 +23,24 @@ class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):
         self.transformer = GPTDolomiteModel(config, **kwargs)
 
         if not self._tied_word_embeddings:
-            self.lm_head = Linear(config.n_embd, config.vocab_size, bias=False)
+            self.lm_head = torch.nn.Linear(config.n_embd, config.vocab_size, bias=False)
 
         self.m_width = config.m_width
 
         # Initialize weights and apply final processing
         self.post_init()
 
-    def get_input_embeddings(self) -> Embedding:
+    def get_input_embeddings(self) -> torch.nn.Embedding:
         return self.transformer.wte
 
-    def set_input_embeddings(self, value: Embedding) -> None:
+    def set_input_embeddings(self, value: torch.nn.Embedding) -> None:
         self.transformer.wte = value
 
-    def get_output_embeddings(self) -> Linear:
+    def get_output_embeddings(self) -> torch.nn.Linear:
         if not self._tied_word_embeddings:
             return self.lm_head
 
-    def set_output_embeddings(self, new_embeddings: Linear) -> None:
+    def set_output_embeddings(self, new_embeddings: torch.nn.Linear) -> None:
         if not self._tied_word_embeddings:
             self.lm_head = new_embeddings
 

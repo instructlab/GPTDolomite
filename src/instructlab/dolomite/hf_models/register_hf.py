@@ -5,7 +5,8 @@
 from transformers import AutoConfig, AutoModel, AutoModelForCausalLM
 
 # Local
-from .models import GPTDolomiteConfig, GPTDolomiteForCausalLM, GPTDolomiteModel
+from .config import GPTDolomiteConfig
+from .models import GPTDolomiteForCausalLM, GPTDolomiteModel
 
 # (AutoConfig, AutoModel, AutoModelForCausalLM)
 _CUSTOM_MODEL_REGISTRY = [

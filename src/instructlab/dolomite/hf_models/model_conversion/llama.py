@@ -6,12 +6,12 @@ from transformers import AutoConfig, AutoTokenizer, GenerationConfig, LlamaConfi
 
 # Local
 from ...utils import SafeTensorsWeightsManager, download_repo
+from ..config import GPTDolomiteConfig
 from ..enums import AttentionHeadType
 from ..modeling_utils import (
     interleave_query_key_value_tensor_for_attention,
     split_query_key_value_tensor_for_attention,
 )
-from ..models import GPTDolomiteConfig
 from ..models.gpt_dolomite import (
     interleave_up_gate_tensor_for_mlp,
     split_up_gate_tensor_for_mlp,
