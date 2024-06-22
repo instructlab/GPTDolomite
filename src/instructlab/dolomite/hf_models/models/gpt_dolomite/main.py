@@ -11,8 +11,8 @@ import torch
 import torch.nn.functional as F
 
 # Local
+from ...config import GPTDolomiteConfig
 from .base import GPTDolomiteModel, GPTDolomitePreTrainedModel
-from .config import GPTDolomiteConfig
 
 
 class GPTDolomiteForCausalLM(GPTDolomitePreTrainedModel):

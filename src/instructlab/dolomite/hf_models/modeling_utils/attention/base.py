@@ -11,8 +11,8 @@ import torch
 import torch.nn.functional as F
 
 # Local
+from ...config import GPTDolomiteConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
-from ...models.gpt_dolomite.config import GPTDolomiteConfig
 from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 

@@ -8,8 +8,8 @@ from typing import Tuple
 import torch
 
 # Local
+from ...config import GPTDolomiteConfig
 from ...modeling_utils import get_activation_function, is_glu
-from .config import GPTDolomiteConfig
 
 
 class MLP(torch.nn.Module):

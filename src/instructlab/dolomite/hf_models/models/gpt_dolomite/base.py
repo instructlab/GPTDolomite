@@ -11,10 +11,10 @@ from transformers.modeling_outputs import BaseModelOutputWithPast
 import torch
 
 # Local
+from ...config import GPTDolomiteConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ...modeling_utils import Alibi, RMSNorm, RoPE, get_normalization_function
 from ...utils import check_list_type, flatten_and_convert_to_tensors
-from .config import GPTDolomiteConfig
 from .layer import GPTDolomiteBlock
 
 DEFAULT_NORMALIZATION_IMPLEMENTATION = "torch"

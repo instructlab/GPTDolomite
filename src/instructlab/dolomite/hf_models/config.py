@@ -5,7 +5,7 @@
 from transformers import PretrainedConfig
 
 # Local
-from ...enums import AttentionHeadType, PositionEmbeddingType
+from .enums import AttentionHeadType, PositionEmbeddingType
 
 
 class GPTDolomiteConfig(PretrainedConfig):
@@ -20,6 +20,8 @@ class GPTDolomiteConfig(PretrainedConfig):
 
     # NOTE: initializer range is kept for backward compatiblity
     #       but it is not used anymore
+    #     : also rope_scaling is not used anymore but kept for
+    #       same reason.
 
     def __init__(
         self,

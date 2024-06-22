@@ -9,9 +9,9 @@ from transformers import DynamicCache
 import torch
 
 # Local
+from ...config import GPTDolomiteConfig
 from ...enums import AttentionHeadType
 from ...modeling_utils import get_attention_module, get_normalization_function
-from .config import GPTDolomiteConfig
 from .mlp import MLP
 
 

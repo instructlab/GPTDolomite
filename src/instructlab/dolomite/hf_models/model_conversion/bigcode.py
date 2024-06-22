@@ -8,8 +8,8 @@ import shutil
 from transformers import AutoConfig, AutoTokenizer, GenerationConfig, GPTBigCodeConfig
 
 # Local
+from ..config import GPTDolomiteConfig
 from ..enums import AttentionHeadType, PositionEmbeddingType
-from ..models import GPTDolomiteConfig
 
 
 def import_from_huggingface_bigcode(
