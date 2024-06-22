@@ -12,17 +12,13 @@ import torch
 
 # Local
 from ...enums import AttentionHeadType, PositionEmbeddingType
-from ...modeling_utils import (
-    Alibi,
-    RMSNorm,
-    RoPE,
-    get_normalization_function,
-)
+from ...modeling_utils import Alibi, RMSNorm, RoPE, get_normalization_function
 from ...utils import check_list_type, flatten_and_convert_to_tensors
 from .config import GPTDolomiteConfig
 from .layer import GPTDolomiteBlock
 
-DEFAULT_NORMALIZATION_IMPLEMENTATION = 'torch'
+DEFAULT_NORMALIZATION_IMPLEMENTATION = "torch"
+
 
 class GPTDolomitePreTrainedModel(PreTrainedModel):
     """
@@ -82,7 +78,15 @@ class GPTDolomitePreTrainedModel(PreTrainedModel):
 
     def _init_weights(self, module: torch.nn.Module) -> None:
         if isinstance(
-            module, (torch.nn.Embedding, torch.nn.Linear, torch.nn.LayerNorm, RMSNorm, Alibi, RoPE)
+            module,
+            (
+                torch.nn.Embedding,
+                torch.nn.Linear,
+                torch.nn.LayerNorm,
+                RMSNorm,
+                Alibi,
+                RoPE,
+            ),
         ):
             module.reset_parameters()
 

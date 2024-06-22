@@ -12,6 +12,7 @@ _NORMALIZATION_FUNCTIONS = {
     "rmsnorm": get_rmsnorm,
 }
 
+
 def get_normalization_function(
     name: str,
     normalized_shape: int,
@@ -28,4 +29,3 @@ def get_normalization_function(
     raise ValueError(
         f"unexpected `normalization_implementation` {normalization_implementation}"
     )
-

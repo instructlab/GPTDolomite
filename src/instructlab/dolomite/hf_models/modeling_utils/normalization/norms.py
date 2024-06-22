@@ -2,17 +2,18 @@
 # Extracted from https://github.com/ibm-granite/dolomite-engine
 # ----------------------------------------------------------------
 
-# Third Party
-import torch
-
 # Standard
 import numbers
+
+# Third Party
+import torch
 
 # ---------------- LayerNorm ---------------
 
 _LAYERNORM_MODULES = {
     "torch": torch.nn.LayerNorm,
 }
+
 
 def get_layernorm(
     normalized_shape: int,
@@ -28,10 +29,12 @@ def get_layernorm(
         f"unexpected `normalization_implementation` {normalization_implementation}"
     )
 
+
 # --------------- RMS Norm ---------------
 # ----------------------------------------------------------------
 # Extracted from https://github.com/ibm-granite/dolomite-engine
 # ----------------------------------------------------------------
+
 
 class RMSNorm(torch.nn.Module):
     def __init__(self, normalized_shape: int, eps: float = 1e-6) -> None:
@@ -59,7 +62,9 @@ class RMSNorm(torch.nn.Module):
     def reset_parameters(self) -> None:
         torch.nn.init.ones_(self.weight)
 
+
 _RMSNORM_MODULES = {"torch": RMSNorm}
+
 
 def get_rmsnorm(
     normalized_shape: int,

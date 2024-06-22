@@ -5,14 +5,14 @@
 from typing import Tuple
 
 # Third Party
+from torch.nn import Linear  # replaces ParameterizedLinear
 from transformers import DynamicCache
 import torch
 import torch.nn.functional as F
-from torch.nn import Linear # replaces ParameterizedLinear
 
 # Local
-from ...models.gpt_dolomite.config import GPTDolomiteConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
+from ...models.gpt_dolomite.config import GPTDolomiteConfig
 from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 

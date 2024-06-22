@@ -4,7 +4,9 @@
 # Third Party
 from transformers import PretrainedConfig
 
+# Local
 from ...enums import AttentionHeadType, PositionEmbeddingType
+
 
 class GPTDolomiteConfig(PretrainedConfig):
     model_type = "gpt_dolomite"
