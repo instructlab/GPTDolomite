@@ -250,6 +250,7 @@ def _export_config_to_huggingface(config: GPTDolomiteConfig) -> LlamaConfig:
     assert config.position_embedding_type == "rope"
 
     original_config = LlamaConfig(
+        architectures=config.architectures,
         vocab_size=config.vocab_size,
         max_position_embeddings=config.n_positions,
         hidden_size=config.n_embd,
