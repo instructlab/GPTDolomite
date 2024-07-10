@@ -10,7 +10,6 @@ authors = [
     { name="InstructLab", email="dev@instructlab.ai" },
 ]
 description = "Dolomite Engine"
-version = "0.0.1.dev"
 readme = "README.md"
 license = {text = "Apache-2.0"}
 requires-python = ">=3.10"
@@ -28,7 +27,7 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: Implementation :: CPython",
 ]
-dynamic = ["dependencies"]
+dynamic = ["dependencies", "version"]
 
 [project.scripts]
 
@@ -36,6 +35,11 @@ dynamic = ["dependencies"]
 homepage = "https://instructlab.ai"
 source = "https://github.com/instructlab/GPTDolomite"
 issues = "https://github.com/instructlab/GPTDolomite/issues"
+
+[tool.setuptools_scm]
+version_file = "src/instructlab/dolomite/_version.py"
+# do not include +gREV local version, required for Test PyPI upload
+local_scheme = "no-local-version"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
