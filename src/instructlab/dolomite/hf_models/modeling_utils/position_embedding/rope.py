@@ -55,9 +55,7 @@ class RoPE(torch.nn.Module):
         self, seq_len: int, device: torch.device, dtype: torch.dtype
     ) -> None:
         self.max_seq_len_cached = seq_len
-        t = torch.arange(
-            self.max_seq_len_cached, device=device, dtype=self.inv_freq.dtype
-        )
+        t = torch.arange(self.max_seq_len_cached, device=device, dtype=torch.float32)
 
         freqs = torch.outer(t, self.inv_freq)
         # Different from paper, but it uses a different permutation in order to obtain the same calculation
