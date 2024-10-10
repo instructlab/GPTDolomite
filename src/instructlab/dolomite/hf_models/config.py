@@ -1,5 +1,7 @@
+# Third Party
 from transformers import PretrainedConfig
 
+# Local
 from .enums import AttentionHeadType, InitMethod, PositionEmbeddingType
 
 
@@ -98,7 +100,9 @@ class CommonConfig(PretrainedConfig):
             if self.num_key_value_heads is None:
                 self.num_key_value_heads = 1
 
-            assert self.num_key_value_heads == 1, "MultiQueryAttention should have 1 head for keys and values"
+            assert (
+                self.num_key_value_heads == 1
+            ), "MultiQueryAttention should have 1 head for keys and values"
         elif attention_head_type == AttentionHeadType.gqa:
             assert (
                 self.num_key_value_heads is not None
@@ -108,4 +112,9 @@ class CommonConfig(PretrainedConfig):
                 self.n_head % self.num_key_value_heads == 0
             ), "GroupedQueryAttention should have more than 1 head for keys and values"
 
-        super().__init__(bos_token_id=bos_token_id, eos_token_id=eos_token_id, pad_token_id=pad_token_id, **kwargs)
+        super().__init__(
+            bos_token_id=bos_token_id,
+            eos_token_id=eos_token_id,
+            pad_token_id=pad_token_id,
+            **kwargs,
+        )

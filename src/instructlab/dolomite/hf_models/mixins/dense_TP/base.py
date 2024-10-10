@@ -1,16 +1,25 @@
+# Third Party
 import torch.nn as nn
 
+# Local
 from ....utils import ProcessGroupManager
 from ...config import CommonConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ...modeling_utils import RoPE, YaRNScaledRoPE
-from ...modeling_utils_TP import Alibi_TP, Dropout_TP, Embedding_TP, get_normalization_function_TP
+from ...modeling_utils_TP import (
+    Alibi_TP,
+    Dropout_TP,
+    Embedding_TP,
+    get_normalization_function_TP,
+)
 from ..dense import BaseModelMixin, PreTrainedModelMixin
 
 
 class PreTrainedModelMixin_TP(PreTrainedModelMixin):
     def __init__(self, config: CommonConfig, *args, **kwargs):
-        self.tensor_parallel_word_embeddings = kwargs.get("tensor_parallel_word_embeddings", False)
+        self.tensor_parallel_word_embeddings = kwargs.get(
+            "tensor_parallel_word_embeddings", False
+        )
         self.sequence_parallel = kwargs.get("sequence_parallel", False)
 
         super().__init__(config, *args, **kwargs)
@@ -67,7 +76,9 @@ class BaseModelMixin_TP(PreTrainedModelMixin_TP, BaseModelMixin):
             sequence_parallel=self.sequence_parallel,
         )
 
-        self.position_embedding_type = PositionEmbeddingType(config.position_embedding_type)
+        self.position_embedding_type = PositionEmbeddingType(
+            config.position_embedding_type
+        )
         self._setup_positional_encoding()
 
         # Initialize weights and apply final processing
@@ -90,7 +101,9 @@ class BaseModelMixin_TP(PreTrainedModelMixin_TP, BaseModelMixin):
         elif self.position_embedding_type == PositionEmbeddingType.rope:
             if self.config.rope_scaling is None:
                 self.rope = RoPE(
-                    self.head_dim, max_position_embeddings=max_position_embeddings, base=self.config.rope_theta
+                    self.head_dim,
+                    max_position_embeddings=max_position_embeddings,
+                    base=self.config.rope_theta,
                 )
             else:
                 self.rope = YaRNScaledRoPE(
@@ -98,7 +111,9 @@ class BaseModelMixin_TP(PreTrainedModelMixin_TP, BaseModelMixin):
                     max_position_embeddings=max_position_embeddings,
                     base=self.config.rope_theta,
                     scale=self.config.rope_scaling["factor"],
-                    original_max_position_embeddings=self.config.rope_scaling["original_max_position_embeddings"],
+                    original_max_position_embeddings=self.config.rope_scaling[
+                        "original_max_position_embeddings"
+                    ],
                 )
         else:
             raise NotImplementedError()

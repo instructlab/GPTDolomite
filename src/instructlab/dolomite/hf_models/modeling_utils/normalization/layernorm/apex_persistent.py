@@ -1,9 +1,11 @@
+# Third Party
 import torch
 import torch.nn as nn
 
 
 def is_apex_persistent_layernorm_available() -> bool:
     try:
+        # Third Party
         from apex.contrib.layer_norm.layer_norm import FastLayerNormFN
 
         return True
@@ -12,6 +14,7 @@ def is_apex_persistent_layernorm_available() -> bool:
 
 
 if is_apex_persistent_layernorm_available():
+    # Third Party
     from apex.contrib.layer_norm.layer_norm import FastLayerNormFN
 
 
@@ -44,7 +47,11 @@ _PERSISTENT_LAYERNORM_ALLOWED_HIDDEN_STATES = [
 
 
 def apex_persistent_layernorm(
-    input: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor, eps: float, memory_efficient
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    bias: torch.Tensor,
+    eps: float,
+    memory_efficient,
 ) -> torch.Tensor:
     return FastLayerNormFN.apply(input, weight, bias, eps, memory_efficient)
 

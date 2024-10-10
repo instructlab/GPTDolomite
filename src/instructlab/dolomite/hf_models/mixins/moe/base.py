@@ -1,10 +1,13 @@
+# Standard
 from dataclasses import dataclass
 
-import torch
-import torch.nn as nn
+# Third Party
 from transformers import DynamicCache
 from transformers.modeling_outputs import MoeModelOutputWithPast
+import torch
+import torch.nn as nn
 
+# Local
 from ...config import CommonConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ...modeling_utils import ParameterizedEmbedding, get_normalization_function
@@ -39,9 +42,13 @@ class BaseMoEModelMixin(BaseModelMixin):
 
         self.head_dim = self.embed_dim // self.num_heads
 
-        self.wte = ParameterizedEmbedding(config.vocab_size, self.embed_dim, std=self.initializer_range)
+        self.wte = ParameterizedEmbedding(
+            config.vocab_size, self.embed_dim, std=self.initializer_range
+        )
 
-        self.drop = nn.Identity() if config.embd_pdrop == 0 else nn.Dropout(config.embd_pdrop)
+        self.drop = (
+            nn.Identity() if config.embd_pdrop == 0 else nn.Dropout(config.embd_pdrop)
+        )
         self.h = nn.ModuleList(
             [
                 self.layer_class(
@@ -62,7 +69,9 @@ class BaseMoEModelMixin(BaseModelMixin):
             normalization_implementation=self.normalization_implementation,
         )
 
-        self.position_embedding_type = PositionEmbeddingType(config.position_embedding_type)
+        self.position_embedding_type = PositionEmbeddingType(
+            config.position_embedding_type
+        )
         self._setup_positional_encoding()
 
         # Initialize weights and apply final processing
@@ -116,7 +125,9 @@ class BaseMoEModelMixin(BaseModelMixin):
         #     attention_mask -> (batch_size, 1, query_length, key_length)
         # ==========================================================================================
 
-        past_key_values = DynamicCache() if use_cache and past_key_values is None else past_key_values
+        past_key_values = (
+            DynamicCache() if use_cache and past_key_values is None else past_key_values
+        )
         all_hidden_states = () if output_hidden_states else None
         all_router_logits = () if output_router_logits else None
         total_aux_loss = 0
@@ -188,7 +199,9 @@ class BaseMoEModelMixin(BaseModelMixin):
         tuple[torch.Tensor],
     ]:
         output_router_logits = (
-            output_router_logits if output_router_logits is not None else self.config.output_router_logits
+            output_router_logits
+            if output_router_logits is not None
+            else self.config.output_router_logits
         )
 
         return super()._prepare_a_bunch_of_stuff(

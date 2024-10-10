@@ -1,7 +1,9 @@
-import torch
+# Third Party
 from transformers import DynamicCache
 from transformers.modeling_flash_attention_utils import _flash_attention_forward
+import torch
 
+# Local
 from ...enums import AttentionHeadType, PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention

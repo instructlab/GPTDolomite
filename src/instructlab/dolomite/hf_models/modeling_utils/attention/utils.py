@@ -1,3 +1,4 @@
+# Third Party
 import torch
 
 
@@ -61,14 +62,21 @@ def interleave_query_key_value_tensor_for_gqa(
 
 
 def split_query_key_value_tensor_for_gqa(
-    query_key_value_weight: torch.Tensor, num_heads: int, num_key_value_heads: int, head_dim: int
+    query_key_value_weight: torch.Tensor,
+    num_heads: int,
+    num_key_value_heads: int,
+    head_dim: int,
 ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     query_heads_per_group = num_heads // num_key_value_heads
     original_shape = query_key_value_weight.shape
 
-    query_key_value_weight = query_key_value_weight.view(num_key_value_heads, (query_heads_per_group + 2), -1)
+    query_key_value_weight = query_key_value_weight.view(
+        num_key_value_heads, (query_heads_per_group + 2), -1
+    )
 
-    query_weight, key_weight, value_weight = query_key_value_weight.split((query_heads_per_group, 1, 1), 1)
+    query_weight, key_weight, value_weight = query_key_value_weight.split(
+        (query_heads_per_group, 1, 1), 1
+    )
 
     query_weight = query_weight.reshape(-1, *original_shape[1:])
     key_weight = key_weight.reshape(-1, *original_shape[1:])
@@ -92,7 +100,9 @@ def split_query_key_value_tensor_for_mqa(
     return query_key_value_weight.split((num_heads * head_dim, head_dim, head_dim))
 
 
-def repeat_key_value(x: torch.Tensor, num_heads: int, num_key_value_heads: int) -> torch.Tensor:
+def repeat_key_value(
+    x: torch.Tensor, num_heads: int, num_key_value_heads: int
+) -> torch.Tensor:
     num_groups = num_heads // num_key_value_heads
 
     if num_groups == 1:

@@ -1,7 +1,9 @@
-import torch
+# Third Party
 from transformers import DynamicCache
 from transformers.modeling_outputs import MoeCausalLMOutputWithPast
+import torch
 
+# Local
 from ...config import CommonConfig
 from ..dense import CausalLMModelMixin
 from .base import MoeModelOutputWithPastAndAuxLoss
@@ -32,18 +34,20 @@ class CausalLMMoEModelMixin(CausalLMModelMixin):
         max_seqlen: torch.Tensor | None = None,
         output_router_logits: bool | None = None,
     ) -> tuple | MoeCausalLMOutputWithPast:
-        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = self.prepare_inputs_for_model(
-            input_ids=input_ids,
-            inputs_embeds=inputs_embeds,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids,
-            labels=labels,
-            cu_seqlens=cu_seqlens,
-            max_seqlen=max_seqlen,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
+        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = (
+            self.prepare_inputs_for_model(
+                input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
+                position_ids=position_ids,
+                token_type_ids=token_type_ids,
+                labels=labels,
+                cu_seqlens=cu_seqlens,
+                max_seqlen=max_seqlen,
+                past_key_values=past_key_values,
+                attention_mask=attention_mask,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+            )
         )
 
         # ==========================================================================================
@@ -76,7 +80,9 @@ class CausalLMMoEModelMixin(CausalLMModelMixin):
         if self.m_width is not None:
             lm_logits = lm_logits / self.m_width
 
-        lm_loss = self.get_autoregressive_language_modeling_loss(lm_logits, labels, cu_seqlens)
+        lm_loss = self.get_autoregressive_language_modeling_loss(
+            lm_logits, labels, cu_seqlens
+        )
         aux_loss = transformer_outputs.aux_loss
 
         if lm_loss is None:

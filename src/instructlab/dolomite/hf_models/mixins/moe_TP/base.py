@@ -1,5 +1,7 @@
+# Third Party
 import torch.nn as nn
 
+# Local
 from ....utils import ProcessGroupManager
 from ...config import CommonConfig
 from ...enums import AttentionHeadType, PositionEmbeddingType
@@ -10,7 +12,9 @@ from ..moe import BaseMoEModelMixin, PreTrainedMoEModelMixin
 
 class PreTrainedMoEModelMixin_TP(PreTrainedMoEModelMixin, PreTrainedModelMixin_TP):
     def __init__(self, config: CommonConfig, *args, **kwargs):
-        self.tensor_parallel_word_embeddings = kwargs.get("tensor_parallel_word_embeddings", False)
+        self.tensor_parallel_word_embeddings = kwargs.get(
+            "tensor_parallel_word_embeddings", False
+        )
         self.sequence_parallel = kwargs.get("sequence_parallel", False)
 
         super().__init__(config, *args, **kwargs)
@@ -68,7 +72,9 @@ class BaseMoEModelMixin_TP(BaseMoEModelMixin, BaseModelMixin_TP):
             sequence_parallel=self.sequence_parallel,
         )
 
-        self.position_embedding_type = PositionEmbeddingType(config.position_embedding_type)
+        self.position_embedding_type = PositionEmbeddingType(
+            config.position_embedding_type
+        )
         self._setup_positional_encoding()
 
         # Initialize weights and apply final processing
