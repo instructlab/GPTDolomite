@@ -3,14 +3,12 @@ from transformers import AutoConfig
 from .bigcode import export_to_huggingface_bigcode, import_from_huggingface_bigcode
 from .granite import export_to_huggingface_granite, import_from_huggingface_granite
 from .llama import export_to_huggingface_llama, import_from_huggingface_llama
-from .mixtral import export_to_huggingface_mixtral, import_from_huggingface_mixtral
 
 
 _MODEL_IMPORT_FUNCTIONS = {
     "gpt_bigcode": import_from_huggingface_bigcode,
     "granite": import_from_huggingface_granite,
     "llama": import_from_huggingface_llama,
-    "mixtral": import_from_huggingface_mixtral,
 }
 
 
@@ -29,7 +27,6 @@ _MODEL_EXPORT_FUNCTIONS = {
     "gpt_bigcode": export_to_huggingface_bigcode,
     "granite": export_to_huggingface_granite,
     "llama": export_to_huggingface_llama,
-    "mixtral": export_to_huggingface_mixtral,
 }
 
 
