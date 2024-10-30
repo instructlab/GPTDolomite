@@ -1,15 +1,9 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Third Party
 from transformers import PretrainedConfig
 
-# Local
-from .enums import AttentionHeadType, PositionEmbeddingType
+from .enums import AttentionHeadType, InitMethod, PositionEmbeddingType
 
 
-class GPTDolomiteConfig(PretrainedConfig):
-    model_type = "gpt_dolomite"
+class CommonConfig(PretrainedConfig):
     keys_to_ignore_at_inference = ["past_key_values"]
     attribute_map = {
         "hidden_size": "n_embd",
@@ -18,11 +12,6 @@ class GPTDolomiteConfig(PretrainedConfig):
         "num_hidden_layers": "n_layer",
     }
 
-    # NOTE: initializer range is kept for backward compatiblity
-    #       but it is not used anymore
-    #     : also rope_scaling is not used anymore but kept for
-    #       same reason.
-
     def __init__(
         self,
         vocab_size: int = 50257,
@@ -30,8 +19,8 @@ class GPTDolomiteConfig(PretrainedConfig):
         n_embd: int = 768,
         n_layer: int = 12,
         n_head: int = 12,
-        num_key_value_heads: int = None,
-        n_inner: int = None,
+        num_key_value_heads: int | None = None,
+        n_inner: int | None = None,
         activation_function: str = "gelu_pytorch_tanh",
         attention_head_type: str = "mqa",
         resid_pdrop: float = 0.1,
@@ -41,20 +30,19 @@ class GPTDolomiteConfig(PretrainedConfig):
         layer_norm_epsilon: float = 1e-5,
         initializer_range: float = 0.02,
         scale_attn_weights: bool = True,
-        attention_multiplier: float = None,
+        attention_multiplier: float | None = None,
         use_cache: bool = True,
         bos_token_id: int = 50256,
         eos_token_id: int = 50256,
         pad_token_id: int = 50256,
         attention_softmax_in_fp32: bool = True,
-        scale_attention_softmax_in_fp32: bool = True,
         add_bias: bool = True,
         position_embedding_type: str = "learned_absolute",
         rope_theta: int = 10000,
-        rope_scaling: dict = None,
-        m_emb: float = None,
-        m_width: float = None,
-        m_residual: float = None,
+        rope_scaling: dict | None = None,
+        m_emb: float | None = None,
+        m_width: float | None = None,
+        m_residual: float | None = None,
         init_method: str = "normal",
         upcast_logits_for_loss: bool = False,
         **kwargs,
@@ -78,7 +66,6 @@ class GPTDolomiteConfig(PretrainedConfig):
         self.attention_multiplier = attention_multiplier
         self.use_cache = use_cache
         self.attention_softmax_in_fp32 = attention_softmax_in_fp32
-        self.scale_attention_softmax_in_fp32 = scale_attention_softmax_in_fp32
         self.position_embedding_type = position_embedding_type
         self.add_bias = add_bias
         self.rope_theta = rope_theta
@@ -93,6 +80,7 @@ class GPTDolomiteConfig(PretrainedConfig):
             assert self.scale_attn_weights
 
         # check if enums are valid
+        init_method = InitMethod(init_method)
         attention_head_type = AttentionHeadType(attention_head_type)
         position_embedding_type = PositionEmbeddingType(position_embedding_type)
 
@@ -110,9 +98,7 @@ class GPTDolomiteConfig(PretrainedConfig):
             if self.num_key_value_heads is None:
                 self.num_key_value_heads = 1
 
-            assert (
-                self.num_key_value_heads == 1
-            ), "MultiQueryAttention should have 1 head for keys and values"
+            assert self.num_key_value_heads == 1, "MultiQueryAttention should have 1 head for keys and values"
         elif attention_head_type == AttentionHeadType.gqa:
             assert (
                 self.num_key_value_heads is not None
@@ -122,9 +108,4 @@ class GPTDolomiteConfig(PretrainedConfig):
                 self.n_head % self.num_key_value_heads == 0
             ), "GroupedQueryAttention should have more than 1 head for keys and values"
 
-        super().__init__(
-            bos_token_id=bos_token_id,
-            eos_token_id=eos_token_id,
-            pad_token_id=pad_token_id,
-            **kwargs,
-        )
+        super().__init__(bos_token_id=bos_token_id, eos_token_id=eos_token_id, pad_token_id=pad_token_id, **kwargs)

@@ -1,20 +1,12 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
 import shutil
 
-# Third Party
-from transformers import AutoConfig, AutoTokenizer, GenerationConfig, GPTBigCodeConfig
+from transformers import AutoConfig, AutoTokenizer, GenerationConfig, GPTBigCodeConfig, GPTBigCodeForCausalLM
 
-# Local
-from ..config import GPTDolomiteConfig
 from ..enums import AttentionHeadType, PositionEmbeddingType
+from ..models import GPTDolomiteConfig
 
 
-def import_from_huggingface_bigcode(
-    pretrained_model_name_or_path: str, save_path: str
-) -> None:
+def import_from_huggingface_bigcode(pretrained_model_name_or_path: str, save_path: str) -> None:
     shutil.copytree(pretrained_model_name_or_path, save_path)
 
     original_config: GPTBigCodeConfig = AutoConfig.from_pretrained(save_path)
@@ -27,13 +19,11 @@ def import_from_huggingface_bigcode(
     try:
         tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
         tokenizer.save_pretrained(save_path, legacy_format=False)
-    except:  # pylint: disable=bare-except
+    except:
         pass
 
 
-def _import_config_from_huggingface(
-    original_config: GPTBigCodeConfig,
-) -> GPTDolomiteConfig:
+def _import_config_from_huggingface(original_config: GPTBigCodeConfig) -> GPTDolomiteConfig:
     assert original_config.activation_function in ["gelu_pytorch_tanh", "gelu"]
 
     config = GPTDolomiteConfig(
@@ -62,9 +52,7 @@ def _import_config_from_huggingface(
     return config
 
 
-def export_to_huggingface_bigcode(
-    pretrained_model_name_or_path: str, save_path: str
-) -> None:
+def export_to_huggingface_bigcode(pretrained_model_name_or_path: str, save_path: str) -> None:
     shutil.copytree(pretrained_model_name_or_path, save_path)
 
     config: GPTDolomiteConfig = AutoConfig.from_pretrained(save_path)
@@ -77,21 +65,19 @@ def export_to_huggingface_bigcode(
     try:
         tokenizer = AutoTokenizer.from_pretrained(pretrained_model_name_or_path)
         tokenizer.save_pretrained(save_path, legacy_format=False)
-    except:  # pylint: disable=bare-except
+    except:
         pass
 
 
 def _export_config_to_huggingface(config: GPTDolomiteConfig) -> GPTBigCodeConfig:
     assert config.activation_function == "gelu_pytorch_tanh"
     assert config.normalization_function == "layernorm"
-    assert AttentionHeadType(config.attention_head_type) in [
-        AttentionHeadType.mha,
-        AttentionHeadType.mqa,
-    ]
-    assert (
-        PositionEmbeddingType(config.position_embedding_type)
-        == PositionEmbeddingType.learned_absolute
-    )
+    assert AttentionHeadType(config.attention_head_type) in [AttentionHeadType.mha, AttentionHeadType.mqa]
+    assert PositionEmbeddingType(config.position_embedding_type) == PositionEmbeddingType.learned_absolute
+    assert config.m_emb is None
+    assert config.m_residual is None
+    assert config.m_width is None
+    assert config.attention_multiplier is None
 
     original_config = GPTBigCodeConfig(
         vocab_size=config.vocab_size,
@@ -109,12 +95,12 @@ def _export_config_to_huggingface(config: GPTDolomiteConfig) -> GPTBigCodeConfig
         scale_attn_weights=config.scale_attn_weights,
         use_cache=config.use_cache,
         attention_softmax_in_fp32=config.attention_softmax_in_fp32,
-        scale_attention_softmax_in_fp32=config.scale_attention_softmax_in_fp32,
         multi_query=config.multi_query,
         tie_word_embeddings=config.tie_word_embeddings,
         bos_token_id=config.bos_token_id,
         eos_token_id=config.eos_token_id,
         pad_token_id=config.pad_token_id,
+        architectures=[GPTBigCodeForCausalLM.__name__],
     )
 
     return original_config

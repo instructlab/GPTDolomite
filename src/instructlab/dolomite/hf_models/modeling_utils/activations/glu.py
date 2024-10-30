@@ -1,11 +1,8 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Third Party
 import torch
+import torch.nn as nn
 
-# Local
 from .base import get_base_activation
+
 
 _GLU_BASE_MAPPING = {
     "ceglu": "celu",
@@ -21,8 +18,8 @@ _GLU_BASE_MAPPING = {
 }
 
 
-class GLUActivation(torch.nn.Module):
-    def __init__(self, base_activation: torch.nn.Module) -> None:
+class GLUActivation(nn.Module):
+    def __init__(self, base_activation: nn.Module) -> None:
         super().__init__()
         self.base_activation = base_activation
 
@@ -31,10 +28,10 @@ class GLUActivation(torch.nn.Module):
         return x[0] * self.base_activation(x[1])
 
 
-def get_glu_activation(name: str) -> torch.nn.Module:
+def get_glu_activation(name: str) -> nn.Module:
     # for glu and sigmoid_glu, we directly return the pytorch's GLU
     if name in ["glu", "sigmoid_glu"]:
-        activation_function = torch.nn.modules.GLU()
+        activation_function = nn.modules.GLU()
     else:
         if name in _GLU_BASE_MAPPING:
             name = _GLU_BASE_MAPPING[name]

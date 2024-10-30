@@ -1,26 +1,20 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
-from typing import Tuple
+import math
 
-# Third Party
-from torch.nn import Linear  # replaces ParameterizedLinear
-from transformers import DynamicCache
 import torch
+import torch.nn as nn
 import torch.nn.functional as F
+from transformers import DynamicCache
 
-# Local
-from ...config import GPTDolomiteConfig
-from ...enums import AttentionHeadType, PositionEmbeddingType
+from ...config import CommonConfig
+from ...enums import AttentionHeadType, InitMethod, PositionEmbeddingType
+from ...utils import divide_if_divisible
+from ..linear import ParameterizedLinear
 from ..position_embedding import apply_rotary_pos_emb
 from .utils import repeat_key_value
 
 
-class Attention(torch.nn.Module):
-    def __init__(
-        self, config: GPTDolomiteConfig, causal: bool, layer_idx: int = None
-    ) -> None:
+class Attention(nn.Module):
+    def __init__(self, config: CommonConfig, causal: bool, layer_idx: int | None = None) -> None:
         super().__init__()
 
         self.causal = causal
@@ -29,24 +23,25 @@ class Attention(torch.nn.Module):
         self.num_key_value_heads = config.num_key_value_heads
         self.add_bias = config.add_bias
 
-        assert (
-            self.hidden_size % self.num_heads == 0
-        ), f"`hidden_size` ({self.hidden_size}) must be divisible by `num_heads` ({self.num_heads})"
+        initializer_range = config.initializer_range
+        m_width = config.m_width
+        n_layer = config.n_layer
+        init_method = InitMethod(config.init_method)
 
-        self.head_dim = self.hidden_size // self.num_heads
+        self.head_dim = divide_if_divisible(
+            self.hidden_size,
+            self.num_heads,
+            f"`hidden_size` ({self.hidden_size}) must be divisible by `num_heads` ({self.num_heads})",
+        )
+
         self.attention_head_type = AttentionHeadType(config.attention_head_type)
 
-        self.position_embedding_type = PositionEmbeddingType(
-            config.position_embedding_type
-        )
+        self.position_embedding_type = PositionEmbeddingType(config.position_embedding_type)
         self.scale_attn_weights = config.scale_attn_weights
         self.attention_multiplier = config.attention_multiplier
 
         self.layer_idx = layer_idx
         self.attention_softmax_in_fp32 = config.attention_softmax_in_fp32
-        self.scale_attention_softmax_in_fp32 = (
-            config.scale_attention_softmax_in_fp32 and config.attention_softmax_in_fp32
-        )
 
         if self.attention_head_type == AttentionHeadType.mha:
             if self.num_key_value_heads is None:
@@ -60,49 +55,43 @@ class Attention(torch.nn.Module):
                 self.num_key_value_heads is not None
             ), "`num_key_value_heads` needs to be specified with GroupedQueryAttention"
 
-            assert self.num_heads % self.num_key_value_heads == 0, (
-                f"`num_heads` ({self.num_heads}) should be a multiple of `num_key_value_heads` "
-                f"({self.num_key_value_heads})"
+            divide_if_divisible(
+                self.num_heads,
+                self.num_key_value_heads,
+                f"`num_heads` ({self.num_heads}) should be a multiple of `num_key_value_heads` ({self.num_key_value_heads})",
             )
         elif self.attention_head_type == AttentionHeadType.mqa:
             if self.num_key_value_heads is None:
                 self.num_key_value_heads = 1
 
-            assert (
-                self.num_key_value_heads == 1
-            ), f"{self.__class__.__name__} should have 1 head for keys and values"
+            assert self.num_key_value_heads == 1, f"{self.__class__.__name__} should have 1 head for keys and values"
         else:
-            raise ValueError(
-                f"unexpected attention_head_type ({self.attention_head_type})"
-            )
+            raise ValueError(f"unexpected attention_head_type ({self.attention_head_type})")
 
         # note that the actual layout is different for the output and depends on whether we are using MHA, MQA or GQA
         # (self.hidden_size + 2 * self.num_key_value_heads * self.head_dim) is just the actual number output features
-        self.c_attn = Linear(
+        std = initializer_range
+        if init_method == InitMethod.mup:
+            std /= math.sqrt(m_width)
+        self.c_attn = ParameterizedLinear(
             self.hidden_size,
             self.hidden_size + 2 * self.num_key_value_heads * self.head_dim,
             bias=self.add_bias,
+            std=std,
         )
 
-        self.c_proj = Linear(self.hidden_size, self.hidden_size, bias=self.add_bias)
+        std = initializer_range / math.sqrt(2 * n_layer)
+        if init_method == InitMethod.mup:
+            std /= math.sqrt(m_width)
+        self.c_proj = ParameterizedLinear(self.hidden_size, self.hidden_size, bias=self.add_bias, std=std)
 
         self.attn_pdrop = config.attn_pdrop
         self.resid_pdrop = config.resid_pdrop
 
-        self.attn_dropout = (
-            torch.nn.Identity()
-            if self.attn_pdrop == 0
-            else torch.nn.Dropout(self.attn_pdrop)
-        )
-        self.resid_dropout = (
-            torch.nn.Identity()
-            if self.resid_pdrop == 0
-            else torch.nn.Dropout(self.resid_pdrop)
-        )
+        self.attn_dropout = nn.Identity() if self.attn_pdrop == 0 else nn.Dropout(self.attn_pdrop)
+        self.resid_dropout = nn.Identity() if self.resid_pdrop == 0 else nn.Dropout(self.resid_pdrop)
 
-    def _prepare_qkv_for_forward(
-        self, hidden_states: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _prepare_qkv_for_forward(self, hidden_states: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # ==========================================================================================
         # hidden_states -> (batch_size, query_length, num_heads * head_dim)
         # ==========================================================================================
@@ -122,9 +111,7 @@ class Attention(torch.nn.Module):
         elif self.attention_head_type == AttentionHeadType.mqa:
             query, key, value = self._prepare_qkv_for_forward_mqa(hidden_states)
         else:
-            raise ValueError(
-                f"unexpected attention_head_type ({self.attention_head_type})"
-            )
+            raise ValueError(f"unexpected attention_head_type ({self.attention_head_type})")
 
         # ==========================================================================================
         # query -> (batch_size, num_heads, query_length, head_dim)
@@ -136,7 +123,7 @@ class Attention(torch.nn.Module):
 
     def _prepare_qkv_for_forward_mha(
         self, hidden_states: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, query_length = hidden_states.shape[:-1]
 
         hidden_states = hidden_states.view(batch_size, query_length, self.num_heads, -1)
@@ -148,20 +135,13 @@ class Attention(torch.nn.Module):
 
     def _prepare_qkv_for_forward_gqa(
         self, hidden_states: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, query_length = hidden_states.shape[:-1]
 
-        hidden_states = hidden_states.view(
-            batch_size, query_length, self.num_key_value_heads, -1
-        )
+        hidden_states = hidden_states.view(batch_size, query_length, self.num_key_value_heads, -1)
 
         query, key, value = hidden_states.split(
-            (
-                (self.num_heads // self.num_key_value_heads) * self.head_dim,
-                self.head_dim,
-                self.head_dim,
-            ),
-            dim=-1,
+            ((self.num_heads // self.num_key_value_heads) * self.head_dim, self.head_dim, self.head_dim), dim=-1
         )
 
         # this needs to be a reshape instead of view sadly
@@ -175,12 +155,10 @@ class Attention(torch.nn.Module):
 
     def _prepare_qkv_for_forward_mqa(
         self, hidden_states: torch.Tensor
-    ) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, query_length = hidden_states.shape[:-1]
 
-        query, key, value = hidden_states.split(
-            (self.hidden_size, self.head_dim, self.head_dim), dim=-1
-        )
+        query, key, value = hidden_states.split((self.hidden_size, self.head_dim, self.head_dim), dim=-1)
 
         query = query.view(batch_size, query_length, self.num_heads, -1)
 
@@ -193,11 +171,11 @@ class Attention(torch.nn.Module):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        past_key_values: DynamicCache = None,
-        attention_mask: torch.Tensor = None,
-        rope_cos_sin: torch.Tensor = None,
-        cu_seqlens: torch.Tensor = None,
-        max_seqlen: torch.Tensor = None,
+        past_key_values: DynamicCache | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rope_cos_sin: torch.Tensor | None = None,
+        cu_seqlens: torch.Tensor | None = None,
+        max_seqlen: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # ==========================================================================================
         # hidden_states -> (batch_size, query_length, num_heads * head_dim)
@@ -255,20 +233,16 @@ class Attention(torch.nn.Module):
 
         if attention_mask is None:
             attn_weights = torch.empty(
-                (batch_size * self.num_heads, query_length, key_length),
-                device=query.device,
-                dtype=query.dtype,
+                (batch_size * self.num_heads, query_length, key_length), device=query.device, dtype=query.dtype
             )
             beta = 0
         else:
-            attn_weights = attention_mask.expand(-1, self.num_heads, -1, -1).reshape(
-                -1, query_length, key_length
-            )
+            attn_weights = attention_mask.expand(-1, self.num_heads, -1, -1).reshape(-1, query_length, key_length)
             beta = 1
 
-        attn_weights = torch.baddbmm(
-            attn_weights, query, key, beta=beta, alpha=self._get_softmax_scale(False)
-        ).view(batch_size, self.num_heads, query_length, key_length)
+        attn_weights = torch.baddbmm(attn_weights, query, key, beta=beta, alpha=self._get_softmax_scale(False)).view(
+            batch_size, self.num_heads, query_length, key_length
+        )
 
         # ==========================================================================================
         # attn_weights -> (batch_size, num_heads, query_length, key_length)
@@ -289,9 +263,7 @@ class Attention(torch.nn.Module):
         # ==========================================================================================
 
         attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(
-            batch_size, -1, self.num_heads * self.head_dim
-        )
+        attn_output = attn_output.reshape(batch_size, -1, self.num_heads * self.head_dim)
 
         # ==========================================================================================
         # attn_output -> (batch_size, query_length, num_heads * head_dim)

@@ -1,8 +1,9 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
 from enum import Enum
+
+
+class InitMethod(Enum):
+    normal = "normal"
+    mup = "mup"
 
 
 class PositionEmbeddingType(Enum):

@@ -1,18 +1,14 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
-from typing import Tuple
+import math
 
-# Third Party
 import torch
+import torch.nn as nn
 
-# Local
-from ...config import GPTDolomiteConfig
-from ...modeling_utils import get_activation_function, is_glu
+from ...enums import InitMethod
+from ...modeling_utils import ParameterizedLinear, get_activation_function, is_glu
+from .config import GPTDolomiteConfig
 
 
-class MLP(torch.nn.Module):
+class MLP(nn.Module):
     def __init__(self, config: GPTDolomiteConfig) -> None:
         super().__init__()
 
@@ -22,21 +18,29 @@ class MLP(torch.nn.Module):
         add_bias = config.add_bias
         residual_dropout = config.resid_pdrop
 
-        self.c_fc = torch.nn.Linear(
+        init_method = InitMethod(config.init_method)
+        initializer_range = config.initializer_range
+        m_width = config.m_width
+        n_layer = config.n_layer
+
+        std = initializer_range
+        if init_method == InitMethod.mup:
+            std /= math.sqrt(m_width)
+        self.c_fc = ParameterizedLinear(
             hidden_size,
             2 * intermediate_size if is_glu(activation_function) else intermediate_size,
             bias=add_bias,
+            std=std,
         )
 
         self.act = get_activation_function(activation_function)
 
-        self.c_proj = torch.nn.Linear(intermediate_size, hidden_size, bias=add_bias)
+        std = initializer_range / math.sqrt(2 * n_layer)
+        if init_method == InitMethod.mup:
+            std /= math.sqrt(m_width)
+        self.c_proj = ParameterizedLinear(intermediate_size, hidden_size, bias=add_bias, std=std)
 
-        self.dropout = (
-            torch.nn.Identity()
-            if residual_dropout == 0
-            else torch.nn.Dropout(residual_dropout)
-        )
+        self.dropout = nn.Identity() if residual_dropout == 0 else nn.Dropout(residual_dropout)
 
     def forward(self, hidden_states: torch.Tensor) -> torch.Tensor:
         hidden_states = self.c_fc(hidden_states)
@@ -46,13 +50,9 @@ class MLP(torch.nn.Module):
         return hidden_states
 
 
-def interleave_up_gate_tensor_for_mlp(
-    up_weight: torch.Tensor, gate_weight: torch.Tensor
-) -> torch.Tensor:
+def interleave_up_gate_tensor_for_mlp(up_weight: torch.Tensor, gate_weight: torch.Tensor) -> torch.Tensor:
     return torch.cat([up_weight, gate_weight])
 
 
-def split_up_gate_tensor_for_mlp(
-    c_fc_weight: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor]:
+def split_up_gate_tensor_for_mlp(c_fc_weight: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
     return c_fc_weight.chunk(2)

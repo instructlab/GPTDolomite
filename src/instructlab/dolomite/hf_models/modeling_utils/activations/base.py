@@ -1,25 +1,18 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# pylint: disable=consider-using-from-import
-# Third Party
-from transformers.activations import ACT2CLS, ClassInstantier
 import torch.nn as nn
+from transformers.activations import ACT2CLS, ClassInstantier
 
-# Local
-from .math_gelu import MathGELU
 
 _BASE_ACTIVATIONS = {
     "celu": nn.modules.CELU,
     "elu": nn.modules.ELU,
     "gelu": nn.modules.GELU,
     "gelu_pytorch_tanh": (nn.modules.GELU, {"approximate": "tanh"}),
-    "gelu_math_tanh": MathGELU,
     "selu": nn.modules.SELU,
     "hard_shrink": nn.modules.Hardshrink,
     "hard_sigmoid": nn.modules.Hardsigmoid,
     "hard_swish": nn.modules.Hardswish,
     "hard_tanh": nn.modules.Hardtanh,
+    "identity": nn.modules.Identity,
     "laplace": ACT2CLS["laplace"],
     "leaky_reLU": nn.modules.LeakyReLU,
     "log_sigmoid": nn.modules.LogSigmoid,

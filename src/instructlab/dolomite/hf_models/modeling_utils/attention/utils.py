@@ -1,27 +1,4 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
-from typing import Tuple
-
-# Third Party
 import torch
-import torch.nn.functional as F
-
-
-# Copied from transformers.models.llama.modeling_llama._get_unpad_data
-def get_unpad_data(
-    attention_mask: torch.Tensor,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
-    seqlens_in_batch = attention_mask.sum(dim=-1, dtype=torch.int32)
-    indices = torch.nonzero(attention_mask.flatten(), as_tuple=False).flatten()
-    max_seqlen_in_batch = seqlens_in_batch.max().item()
-    cu_seqlens = F.pad(torch.cumsum(seqlens_in_batch, dim=0, dtype=torch.int32), (1, 0))
-    return (
-        indices,
-        cu_seqlens,
-        max_seqlen_in_batch,
-    )
 
 
 def interleave_query_key_value_tensor_for_mha(
@@ -45,7 +22,7 @@ def interleave_query_key_value_tensor_for_mha(
 
 def split_query_key_value_tensor_for_mha(
     query_key_value_weight: torch.Tensor, num_heads: int
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     original_shape = query_key_value_weight.shape
 
     query_key_value_weight = query_key_value_weight.view(num_heads, -1)
@@ -84,21 +61,14 @@ def interleave_query_key_value_tensor_for_gqa(
 
 
 def split_query_key_value_tensor_for_gqa(
-    query_key_value_weight: torch.Tensor,
-    num_heads: int,
-    num_key_value_heads: int,
-    head_dim: int,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    query_key_value_weight: torch.Tensor, num_heads: int, num_key_value_heads: int, head_dim: int
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     query_heads_per_group = num_heads // num_key_value_heads
     original_shape = query_key_value_weight.shape
 
-    query_key_value_weight = query_key_value_weight.view(
-        num_key_value_heads, (query_heads_per_group + 2), -1
-    )
+    query_key_value_weight = query_key_value_weight.view(num_key_value_heads, (query_heads_per_group + 2), -1)
 
-    query_weight, key_weight, value_weight = query_key_value_weight.split(
-        (query_heads_per_group, 1, 1), 1
-    )
+    query_weight, key_weight, value_weight = query_key_value_weight.split((query_heads_per_group, 1, 1), 1)
 
     query_weight = query_weight.reshape(-1, *original_shape[1:])
     key_weight = key_weight.reshape(-1, *original_shape[1:])
@@ -118,13 +88,11 @@ def interleave_query_key_value_tensor_for_mqa(
 
 def split_query_key_value_tensor_for_mqa(
     query_key_value_weight: torch.Tensor, num_heads: int, head_dim: int
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     return query_key_value_weight.split((num_heads * head_dim, head_dim, head_dim))
 
 
-def repeat_key_value(
-    x: torch.Tensor, num_heads: int, num_key_value_heads: int
-) -> torch.Tensor:
+def repeat_key_value(x: torch.Tensor, num_heads: int, num_key_value_heads: int) -> torch.Tensor:
     num_groups = num_heads // num_key_value_heads
 
     if num_groups == 1:

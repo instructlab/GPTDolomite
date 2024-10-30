@@ -1,19 +1,11 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
 import json
 import os
 
-# Third Party
+import torch
+from huggingface_hub import split_torch_state_dict_into_shards
 from safetensors import safe_open
 from safetensors.torch import save_file
-from transformers.modeling_utils import (
-    SAFE_WEIGHTS_INDEX_NAME,
-    SAFE_WEIGHTS_NAME,
-    shard_checkpoint,
-)
-import torch
+from transformers.modeling_utils import SAFE_WEIGHTS_INDEX_NAME
 
 
 class SafeTensorsWeightsManager:
@@ -41,7 +33,7 @@ class SafeTensorsWeightsManager:
         return f.get_slice(tensor_name)
 
     def get_tensor(
-        self, tensor_name: str, dtype: torch.dtype = None, device: torch.device = None
+        self, tensor_name: str, dtype: torch.dtype | None = None, device: torch.device | None = None
     ) -> torch.Tensor:
         filename = self.tensor_filenames[tensor_name]
         f = self.file_handles[filename]
@@ -59,8 +51,9 @@ class SafeTensorsWeightsManager:
     def __len__(self) -> int:
         return len(self.tensor_filenames)
 
-    def __iter__(self) -> str:
-        yield from self.tensor_filenames
+    def __iter__(self):
+        for tensor_name in self.tensor_filenames:
+            yield tensor_name
 
     def __eq__(self, __value: object) -> bool:
         if not isinstance(__value, SafeTensorsWeightsManager):
@@ -83,21 +76,22 @@ class SafeTensorsWeightsManager:
 
     @staticmethod
     def save_state_dict(state_dict: dict, save_path: str) -> None:
-        os.makedirs(save_path)
+        os.makedirs(save_path, exist_ok=True)
 
-        shards, index = shard_checkpoint(
-            state_dict, max_shard_size="5GB", weights_name=SAFE_WEIGHTS_NAME
-        )
-
-        for shard_file, shard in shards.items():
+        state_dict_split = split_torch_state_dict_into_shards(state_dict)
+        for filename, tensors in state_dict_split.filename_to_tensors.items():
+            shard = {tensor: state_dict[tensor] for tensor in tensors}
             save_file(
-                shard, os.path.join(save_path, shard_file), metadata={"format": "pt"}
+                shard,
+                os.path.join(save_path, filename),
+                metadata={"format": "pt"},
             )
 
-        if index is not None:
+        if state_dict_split.is_sharded:
+            index = {
+                "metadata": state_dict_split.metadata,
+                "weight_map": state_dict_split.tensor_to_filename,
+            }
+
             with open(os.path.join(save_path, SAFE_WEIGHTS_INDEX_NAME), "w") as f:
-                json.dump(
-                    index,
-                    f,
-                    indent=4,
-                )
+                f.write(json.dumps(index, indent=2))
