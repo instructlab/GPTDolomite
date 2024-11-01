@@ -1,22 +1,14 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Standard
-from typing import Tuple
 import inspect
 
-# Third Party
 import torch
 
-# Local
-from ...config import GPTDolomiteConfig
+from ...config import CommonConfig
 from ...enums import AttentionHeadType
 from .base import Attention
 from .flash import FlashAttention2
 from .padding_free import PaddingFreeAttention
 from .sdpa import SDPA
 from .utils import (
-    get_unpad_data,
     interleave_query_key_value_tensor_for_gqa,
     interleave_query_key_value_tensor_for_mha,
     interleave_query_key_value_tensor_for_mqa,
@@ -25,6 +17,7 @@ from .utils import (
     split_query_key_value_tensor_for_mha,
     split_query_key_value_tensor_for_mqa,
 )
+
 
 _ATTENTION_MODULES = {
     "eager": Attention,
@@ -48,7 +41,7 @@ _SPLIT_FUNCTIONS = {
 
 
 def get_attention_module(
-    config: GPTDolomiteConfig,
+    config: CommonConfig,
     causal: bool,
     attention_implementation: str,
     use_padding_free_transformer: bool,
@@ -76,9 +69,7 @@ def interleave_query_key_value_tensor_for_attention(
 ) -> torch.Tensor:
     if attention_head_type.value in _INTERLEAVE_FUNCTIONS:
         interleave_function = _INTERLEAVE_FUNCTIONS[attention_head_type.value]
-        interleave_function_parameters = inspect.signature(
-            interleave_function
-        ).parameters.keys()
+        interleave_function_parameters = inspect.signature(interleave_function).parameters.keys()
 
         parameters_to_pass = {}
         this_function_parameters = locals()
@@ -98,7 +89,7 @@ def split_query_key_value_tensor_for_attention(
     num_key_value_heads: int,
     head_dim: int,
     attention_head_type: AttentionHeadType,
-) -> Tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
     if attention_head_type.value in _SPLIT_FUNCTIONS:
         split_function = _SPLIT_FUNCTIONS[attention_head_type.value]
         split_function_parameters = inspect.signature(split_function).parameters.keys()

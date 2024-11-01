@@ -1,12 +1,7 @@
-# ----------------------------------------------------------------
-# Extracted from https://github.com/ibm-granite/dolomite-engine
-# ----------------------------------------------------------------
-# Third Party
-from transformers import DynamicCache
 import torch
 import torch.nn.functional as F
+from transformers import DynamicCache
 
-# Local
 from ...enums import PositionEmbeddingType
 from ..position_embedding import apply_rotary_pos_emb
 from .base import Attention
@@ -17,11 +12,11 @@ class SDPA(Attention):
     def forward(
         self,
         hidden_states: torch.Tensor,
-        past_key_values: DynamicCache = None,
-        attention_mask: torch.Tensor = None,
-        rope_cos_sin: torch.Tensor = None,
-        cu_seqlens: torch.Tensor = None,
-        max_seqlen: torch.Tensor = None,
+        past_key_values: DynamicCache | None = None,
+        attention_mask: torch.Tensor | None = None,
+        rope_cos_sin: torch.Tensor | None = None,
+        cu_seqlens: torch.Tensor | None = None,
+        max_seqlen: torch.Tensor | None = None,
     ) -> torch.Tensor:
         # ==========================================================================================
         # hidden_states -> (batch_size, query_length, num_heads * head_dim)
@@ -76,9 +71,7 @@ class SDPA(Attention):
 
         batch_size = attn_output.shape[0]
         attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(
-            batch_size, -1, self.num_heads * self.head_dim
-        )
+        attn_output = attn_output.reshape(batch_size, -1, self.num_heads * self.head_dim)
 
         # ==========================================================================================
         # attn_output -> (batch_size, query_length, num_heads * head_dim)
