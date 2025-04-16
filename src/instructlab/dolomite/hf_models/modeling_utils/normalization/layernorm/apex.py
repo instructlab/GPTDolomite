@@ -1,9 +1,11 @@
+# Third Party
 import torch
 import torch.nn as nn
 
 
 def is_apex_layernorm_available() -> bool:
     try:
+        # Third Party
         from apex.normalization.fused_layer_norm import FusedLayerNormAffineFunction
 
         return True
@@ -12,14 +14,21 @@ def is_apex_layernorm_available() -> bool:
 
 
 if is_apex_layernorm_available():
+    # Third Party
     from apex.normalization.fused_layer_norm import FusedLayerNormAffineFunction
 
 
 def apex_layernorm(
-    input: torch.Tensor, weight: torch.Tensor, bias: torch.Tensor, eps: float, memory_efficient: bool
+    input: torch.Tensor,
+    weight: torch.Tensor,
+    bias: torch.Tensor,
+    eps: float,
+    memory_efficient: bool,
 ) -> torch.Tensor:
     normalized_shape = (input.shape[-1],)
-    return FusedLayerNormAffineFunction.apply(input, weight, bias, normalized_shape, eps, memory_efficient)
+    return FusedLayerNormAffineFunction.apply(
+        input, weight, bias, normalized_shape, eps, memory_efficient
+    )
 
 
 class ApexLayerNorm(nn.LayerNorm):

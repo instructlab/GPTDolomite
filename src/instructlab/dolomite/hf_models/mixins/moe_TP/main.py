@@ -1,8 +1,10 @@
-import torch
+# Third Party
 from torch.distributed._tensor.placement_types import Replicate, Shard
 from transformers import DynamicCache
 from transformers.modeling_outputs import MoeCausalLMOutputWithPast
+import torch
 
+# Local
 from ...modeling_utils_TP import dtensor_to_tensor, tensor_to_dtensor
 from ..dense_TP import CausalLMModelMixin_TP
 from ..moe import CausalLMMoEModelMixin, MoeModelOutputWithPastAndAuxLoss
@@ -27,18 +29,20 @@ class CausalLMMoEModelMixin_TP(CausalLMMoEModelMixin, CausalLMModelMixin_TP):
         max_seqlen: torch.Tensor | None = None,
         output_router_logits: bool | None = None,
     ) -> tuple | MoeCausalLMOutputWithPast:
-        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = self.prepare_inputs_for_model(
-            input_ids=input_ids,
-            inputs_embeds=inputs_embeds,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids,
-            labels=labels,
-            cu_seqlens=cu_seqlens,
-            max_seqlen=max_seqlen,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
+        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = (
+            self.prepare_inputs_for_model(
+                input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
+                position_ids=position_ids,
+                token_type_ids=token_type_ids,
+                labels=labels,
+                cu_seqlens=cu_seqlens,
+                max_seqlen=max_seqlen,
+                past_key_values=past_key_values,
+                attention_mask=attention_mask,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+            )
         )
 
         transformer_outputs: MoeModelOutputWithPastAndAuxLoss = self.transformer(
@@ -60,9 +64,13 @@ class CausalLMMoEModelMixin_TP(CausalLMMoEModelMixin, CausalLMModelMixin_TP):
         if self.m_width is not None:
             lm_logits = lm_logits / self.m_width
 
-        lm_loss = self.get_autoregressive_language_modeling_loss(lm_logits, labels, cu_seqlens)
+        lm_loss = self.get_autoregressive_language_modeling_loss(
+            lm_logits, labels, cu_seqlens
+        )
         aux_loss = tensor_to_dtensor(
-            transformer_outputs.aux_loss, device_mesh=self.tp_mesh, current_placement=Replicate()
+            transformer_outputs.aux_loss,
+            device_mesh=self.tp_mesh,
+            current_placement=Replicate(),
         )
 
         if lm_loss is None:
@@ -75,8 +83,12 @@ class CausalLMMoEModelMixin_TP(CausalLMMoEModelMixin, CausalLMModelMixin_TP):
         else:
             if self.tensor_parallel_word_embeddings:
                 # all gather
-                lm_logits = tensor_to_dtensor(lm_logits, device_mesh=self.tp_mesh, current_placement=Shard(-1))
-                lm_logits = dtensor_to_tensor(lm_logits, device_mesh=self.tp_mesh, desired_placement=Replicate())
+                lm_logits = tensor_to_dtensor(
+                    lm_logits, device_mesh=self.tp_mesh, current_placement=Shard(-1)
+                )
+                lm_logits = dtensor_to_tensor(
+                    lm_logits, device_mesh=self.tp_mesh, desired_placement=Replicate()
+                )
 
         return MoeCausalLMOutputWithPast(
             loss=loss,

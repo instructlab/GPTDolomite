@@ -1,12 +1,23 @@
+# Standard
 import shutil
 
-from transformers import AutoConfig, AutoTokenizer, GenerationConfig, GPTBigCodeConfig, GPTBigCodeForCausalLM
+# Third Party
+from transformers import (
+    AutoConfig,
+    AutoTokenizer,
+    GenerationConfig,
+    GPTBigCodeConfig,
+    GPTBigCodeForCausalLM,
+)
 
+# Local
 from ..enums import AttentionHeadType, PositionEmbeddingType
 from ..models import GPTDolomiteConfig
 
 
-def import_from_huggingface_bigcode(pretrained_model_name_or_path: str, save_path: str) -> None:
+def import_from_huggingface_bigcode(
+    pretrained_model_name_or_path: str, save_path: str
+) -> None:
     shutil.copytree(pretrained_model_name_or_path, save_path)
 
     original_config: GPTBigCodeConfig = AutoConfig.from_pretrained(save_path)
@@ -23,7 +34,9 @@ def import_from_huggingface_bigcode(pretrained_model_name_or_path: str, save_pat
         pass
 
 
-def _import_config_from_huggingface(original_config: GPTBigCodeConfig) -> GPTDolomiteConfig:
+def _import_config_from_huggingface(
+    original_config: GPTBigCodeConfig,
+) -> GPTDolomiteConfig:
     assert original_config.activation_function in ["gelu_pytorch_tanh", "gelu"]
 
     config = GPTDolomiteConfig(
@@ -52,7 +65,9 @@ def _import_config_from_huggingface(original_config: GPTBigCodeConfig) -> GPTDol
     return config
 
 
-def export_to_huggingface_bigcode(pretrained_model_name_or_path: str, save_path: str) -> None:
+def export_to_huggingface_bigcode(
+    pretrained_model_name_or_path: str, save_path: str
+) -> None:
     shutil.copytree(pretrained_model_name_or_path, save_path)
 
     config: GPTDolomiteConfig = AutoConfig.from_pretrained(save_path)
@@ -72,8 +87,14 @@ def export_to_huggingface_bigcode(pretrained_model_name_or_path: str, save_path:
 def _export_config_to_huggingface(config: GPTDolomiteConfig) -> GPTBigCodeConfig:
     assert config.activation_function == "gelu_pytorch_tanh"
     assert config.normalization_function == "layernorm"
-    assert AttentionHeadType(config.attention_head_type) in [AttentionHeadType.mha, AttentionHeadType.mqa]
-    assert PositionEmbeddingType(config.position_embedding_type) == PositionEmbeddingType.learned_absolute
+    assert AttentionHeadType(config.attention_head_type) in [
+        AttentionHeadType.mha,
+        AttentionHeadType.mqa,
+    ]
+    assert (
+        PositionEmbeddingType(config.position_embedding_type)
+        == PositionEmbeddingType.learned_absolute
+    )
     assert config.m_emb is None
     assert config.m_residual is None
     assert config.m_width is None

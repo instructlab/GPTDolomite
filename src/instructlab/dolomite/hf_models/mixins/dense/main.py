@@ -1,8 +1,13 @@
+# Third Party
+from transformers import DynamicCache
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+)
 import torch
 import torch.nn.functional as F
-from transformers import DynamicCache
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
 
+# Local
 from ...config import CommonConfig
 from ...modeling_utils import ParameterizedEmbedding, ParameterizedLinear
 from .base import PreTrainedModelMixin
@@ -21,7 +26,10 @@ class CausalLMModelMixin(PreTrainedModelMixin):
 
         if not self._tied_word_embeddings:
             self.lm_head = ParameterizedLinear(
-                config.n_embd, config.vocab_size, bias=False, std=config.initializer_range
+                config.n_embd,
+                config.vocab_size,
+                bias=False,
+                std=config.initializer_range,
             )
 
         self.m_width = config.m_width
@@ -112,18 +120,20 @@ class CausalLMModelMixin(PreTrainedModelMixin):
         cu_seqlens: torch.Tensor | None = None,
         max_seqlen: torch.Tensor | None = None,
     ) -> tuple | CausalLMOutputWithPast:
-        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = self.prepare_inputs_for_model(
-            input_ids=input_ids,
-            inputs_embeds=inputs_embeds,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids,
-            labels=labels,
-            cu_seqlens=cu_seqlens,
-            max_seqlen=max_seqlen,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
+        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = (
+            self.prepare_inputs_for_model(
+                input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
+                position_ids=position_ids,
+                token_type_ids=token_type_ids,
+                labels=labels,
+                cu_seqlens=cu_seqlens,
+                max_seqlen=max_seqlen,
+                past_key_values=past_key_values,
+                attention_mask=attention_mask,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+            )
         )
 
         # ==========================================================================================
@@ -155,7 +165,9 @@ class CausalLMModelMixin(PreTrainedModelMixin):
         if self.m_width is not None:
             lm_logits = lm_logits / self.m_width
 
-        loss = self.get_autoregressive_language_modeling_loss(lm_logits, labels, cu_seqlens)
+        loss = self.get_autoregressive_language_modeling_loss(
+            lm_logits, labels, cu_seqlens
+        )
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -173,7 +185,10 @@ class CausalLMModelMixin(PreTrainedModelMixin):
         )
 
     def get_autoregressive_language_modeling_loss(
-        self, lm_logits: torch.Tensor, labels: torch.Tensor | None, cu_seqlens: torch.Tensor
+        self,
+        lm_logits: torch.Tensor,
+        labels: torch.Tensor | None,
+        cu_seqlens: torch.Tensor,
     ) -> torch.Tensor:
         if labels is None:
             return None
@@ -193,6 +208,8 @@ class CausalLMModelMixin(PreTrainedModelMixin):
         if self.upcast_logits_for_loss:
             shift_logits = shift_logits.float()
 
-        loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+        loss = F.cross_entropy(
+            shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+        )
 
         return loss

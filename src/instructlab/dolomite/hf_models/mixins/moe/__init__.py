@@ -1,2 +1,7 @@
-from .base import BaseMoEModelMixin, MoeModelOutputWithPastAndAuxLoss, PreTrainedMoEModelMixin
+# Local
+from .base import (
+    BaseMoEModelMixin,
+    MoeModelOutputWithPastAndAuxLoss,
+    PreTrainedMoEModelMixin,
+)
 from .main import CausalLMMoEModelMixin

@@ -1,8 +1,9 @@
+# Third Party
 import torch
 import torch.nn as nn
 
+# Local
 from .base import get_base_activation
-
 
 _GLU_BASE_MAPPING = {
     "ceglu": "celu",

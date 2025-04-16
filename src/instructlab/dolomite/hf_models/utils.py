@@ -1,3 +1,4 @@
+# Third Party
 import torch
 
 
@@ -25,13 +26,18 @@ def convert_padding_free_lists_to_tensors(
     labels: list[list[int]] | None = None,
     device: torch.device = None,
 ) -> tuple[torch.Tensor]:
-
     # check input types are correct
     error_message = "{variable} should be of type List[List[{dtype}]]"
     _check_list_type(input_ids, error_message.format(variable="input_ids", dtype="int"))
-    _check_list_type(inputs_embeds, error_message.format(variable="inputs_embeds", dtype="float"))
-    _check_list_type(position_ids, error_message.format(variable="position_ids", dtype="int"))
-    _check_list_type(token_type_ids, error_message.format(variable="token_type_ids", dtype="int"))
+    _check_list_type(
+        inputs_embeds, error_message.format(variable="inputs_embeds", dtype="float")
+    )
+    _check_list_type(
+        position_ids, error_message.format(variable="position_ids", dtype="int")
+    )
+    _check_list_type(
+        token_type_ids, error_message.format(variable="token_type_ids", dtype="int")
+    )
     _check_list_type(labels, error_message.format(variable="labels", dtype="int"))
 
     # prepare inputs for the model
@@ -57,7 +63,9 @@ def convert_padding_free_lists_to_tensors(
     return input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen
 
 
-def _check_list_type(list_of_list: list[list[int | float]] | None, error_message: str) -> None:
+def _check_list_type(
+    list_of_list: list[list[int | float]] | None, error_message: str
+) -> None:
     if list_of_list is None:
         return
 

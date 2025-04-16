@@ -10,16 +10,18 @@
 
 """Code taken from torchtitan: https://github.com/pytorch/torchtitan/blob/main/torchtitan/models/norms.py"""
 
-
+# Standard
 import math
 
+# Third Party
 import torch
 import torch.nn as nn
 
+# Local
 from .....utils import is_triton_available
 
-
 if is_triton_available():
+    # Third Party
     import triton
     import triton.language as tl
 
@@ -113,7 +115,9 @@ if is_triton_available():
         for row in range(row_start, row_end):
             # Load input, output gradient, and reciprocal standard deviation
             x = tl.load(X + row * stride_x + cols, mask=mask, other=0.0).to(tl.float32)
-            dy = tl.load(DY + row * stride_dy + cols, mask=mask, other=0.0).to(tl.float32)
+            dy = tl.load(DY + row * stride_dy + cols, mask=mask, other=0.0).to(
+                tl.float32
+            )
             rstd = tl.load(Rstd + row)
 
             # Compute normalized input and gradients
@@ -153,7 +157,9 @@ class _TorchTitanRMSNorm(torch.autograd.Function):
             raise ValueError(f"N {N} must be <= {block_N=}")
 
         grid = lambda meta: (M,)
-        _rms_norm_fwd_kernel[grid](x, x.stride(0), y, y.stride(0), weight, rstd, eps, M, N, block_N)
+        _rms_norm_fwd_kernel[grid](
+            x, x.stride(0), y, y.stride(0), weight, rstd, eps, M, N, block_N
+        )
 
         ctx.eps = eps
         ctx.save_for_backward(x, weight, rstd)
@@ -189,14 +195,29 @@ class _TorchTitanRMSNorm(torch.autograd.Function):
 
         grid = lambda meta: (sm_count,)
         _rms_norm_bwd_kernel_sm[grid](
-            x, x.stride(0), weight, dy, dy.stride(0), dx, dx.stride(0), rstd, _dw, eps, M, N, rows_per_sm, block_N
+            x,
+            x.stride(0),
+            weight,
+            dy,
+            dy.stride(0),
+            dx,
+            dx.stride(0),
+            rstd,
+            _dw,
+            eps,
+            M,
+            N,
+            rows_per_sm,
+            block_N,
         )
         dw = _dw.sum(0).to(weight.dtype)
         dx = dx.view(x_shape_start)
         return dx, dw, None
 
 
-def torchtitan_rmsnorm(input: torch.Tensor, weight: torch.Tensor, eps: float) -> torch.Tensor:
+def torchtitan_rmsnorm(
+    input: torch.Tensor, weight: torch.Tensor, eps: float
+) -> torch.Tensor:
     return _TorchTitanRMSNorm.apply(input, weight, eps)
 
 

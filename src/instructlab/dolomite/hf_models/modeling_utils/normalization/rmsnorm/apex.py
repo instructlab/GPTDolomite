@@ -1,10 +1,14 @@
+# Third Party
 import torch
 import torch.nn as nn
 
 
 def is_apex_rmsnorm_available() -> bool:
     try:
-        from apex.normalization.fused_layer_norm import FusedRMSNormAffineMixedDtypesFunction
+        # Third Party
+        from apex.normalization.fused_layer_norm import (
+            FusedRMSNormAffineMixedDtypesFunction,
+        )
 
         return True
     except ImportError:
@@ -12,12 +16,19 @@ def is_apex_rmsnorm_available() -> bool:
 
 
 if is_apex_rmsnorm_available():
-    from apex.normalization.fused_layer_norm import FusedRMSNormAffineMixedDtypesFunction
+    # Third Party
+    from apex.normalization.fused_layer_norm import (
+        FusedRMSNormAffineMixedDtypesFunction,
+    )
 
 
-def apex_rmsnorm(input: torch.Tensor, weight: torch.Tensor, eps: float, memory_efficient: bool) -> torch.Tensor:
+def apex_rmsnorm(
+    input: torch.Tensor, weight: torch.Tensor, eps: float, memory_efficient: bool
+) -> torch.Tensor:
     normalized_shape = (input.shape[-1],)
-    return FusedRMSNormAffineMixedDtypesFunction.apply(input, weight, normalized_shape, eps, memory_efficient)
+    return FusedRMSNormAffineMixedDtypesFunction.apply(
+        input, weight, normalized_shape, eps, memory_efficient
+    )
 
 
 class ApexRMSNorm(nn.RMSNorm):

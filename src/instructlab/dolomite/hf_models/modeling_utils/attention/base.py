@@ -1,10 +1,13 @@
+# Standard
 import math
 
+# Third Party
+from transformers import DynamicCache
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from transformers import DynamicCache
 
+# Local
 from ...config import CommonConfig
 from ...enums import AttentionHeadType, InitMethod, PositionEmbeddingType
 from ...utils import divide_if_divisible
@@ -14,7 +17,9 @@ from .utils import repeat_key_value
 
 
 class Attention(nn.Module):
-    def __init__(self, config: CommonConfig, causal: bool, layer_idx: int | None = None) -> None:
+    def __init__(
+        self, config: CommonConfig, causal: bool, layer_idx: int | None = None
+    ) -> None:
         super().__init__()
 
         self.causal = causal
@@ -36,7 +41,9 @@ class Attention(nn.Module):
 
         self.attention_head_type = AttentionHeadType(config.attention_head_type)
 
-        self.position_embedding_type = PositionEmbeddingType(config.position_embedding_type)
+        self.position_embedding_type = PositionEmbeddingType(
+            config.position_embedding_type
+        )
         self.scale_attn_weights = config.scale_attn_weights
         self.attention_multiplier = config.attention_multiplier
 
@@ -64,9 +71,13 @@ class Attention(nn.Module):
             if self.num_key_value_heads is None:
                 self.num_key_value_heads = 1
 
-            assert self.num_key_value_heads == 1, f"{self.__class__.__name__} should have 1 head for keys and values"
+            assert (
+                self.num_key_value_heads == 1
+            ), f"{self.__class__.__name__} should have 1 head for keys and values"
         else:
-            raise ValueError(f"unexpected attention_head_type ({self.attention_head_type})")
+            raise ValueError(
+                f"unexpected attention_head_type ({self.attention_head_type})"
+            )
 
         # note that the actual layout is different for the output and depends on whether we are using MHA, MQA or GQA
         # (self.hidden_size + 2 * self.num_key_value_heads * self.head_dim) is just the actual number output features
@@ -83,15 +94,23 @@ class Attention(nn.Module):
         std = initializer_range / math.sqrt(2 * n_layer)
         if init_method == InitMethod.mup:
             std /= math.sqrt(m_width)
-        self.c_proj = ParameterizedLinear(self.hidden_size, self.hidden_size, bias=self.add_bias, std=std)
+        self.c_proj = ParameterizedLinear(
+            self.hidden_size, self.hidden_size, bias=self.add_bias, std=std
+        )
 
         self.attn_pdrop = config.attn_pdrop
         self.resid_pdrop = config.resid_pdrop
 
-        self.attn_dropout = nn.Identity() if self.attn_pdrop == 0 else nn.Dropout(self.attn_pdrop)
-        self.resid_dropout = nn.Identity() if self.resid_pdrop == 0 else nn.Dropout(self.resid_pdrop)
+        self.attn_dropout = (
+            nn.Identity() if self.attn_pdrop == 0 else nn.Dropout(self.attn_pdrop)
+        )
+        self.resid_dropout = (
+            nn.Identity() if self.resid_pdrop == 0 else nn.Dropout(self.resid_pdrop)
+        )
 
-    def _prepare_qkv_for_forward(self, hidden_states: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
+    def _prepare_qkv_for_forward(
+        self, hidden_states: torch.Tensor
+    ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         # ==========================================================================================
         # hidden_states -> (batch_size, query_length, num_heads * head_dim)
         # ==========================================================================================
@@ -111,7 +130,9 @@ class Attention(nn.Module):
         elif self.attention_head_type == AttentionHeadType.mqa:
             query, key, value = self._prepare_qkv_for_forward_mqa(hidden_states)
         else:
-            raise ValueError(f"unexpected attention_head_type ({self.attention_head_type})")
+            raise ValueError(
+                f"unexpected attention_head_type ({self.attention_head_type})"
+            )
 
         # ==========================================================================================
         # query -> (batch_size, num_heads, query_length, head_dim)
@@ -138,10 +159,17 @@ class Attention(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, query_length = hidden_states.shape[:-1]
 
-        hidden_states = hidden_states.view(batch_size, query_length, self.num_key_value_heads, -1)
+        hidden_states = hidden_states.view(
+            batch_size, query_length, self.num_key_value_heads, -1
+        )
 
         query, key, value = hidden_states.split(
-            ((self.num_heads // self.num_key_value_heads) * self.head_dim, self.head_dim, self.head_dim), dim=-1
+            (
+                (self.num_heads // self.num_key_value_heads) * self.head_dim,
+                self.head_dim,
+                self.head_dim,
+            ),
+            dim=-1,
         )
 
         # this needs to be a reshape instead of view sadly
@@ -158,7 +186,9 @@ class Attention(nn.Module):
     ) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:
         batch_size, query_length = hidden_states.shape[:-1]
 
-        query, key, value = hidden_states.split((self.hidden_size, self.head_dim, self.head_dim), dim=-1)
+        query, key, value = hidden_states.split(
+            (self.hidden_size, self.head_dim, self.head_dim), dim=-1
+        )
 
         query = query.view(batch_size, query_length, self.num_heads, -1)
 
@@ -233,16 +263,20 @@ class Attention(nn.Module):
 
         if attention_mask is None:
             attn_weights = torch.empty(
-                (batch_size * self.num_heads, query_length, key_length), device=query.device, dtype=query.dtype
+                (batch_size * self.num_heads, query_length, key_length),
+                device=query.device,
+                dtype=query.dtype,
             )
             beta = 0
         else:
-            attn_weights = attention_mask.expand(-1, self.num_heads, -1, -1).reshape(-1, query_length, key_length)
+            attn_weights = attention_mask.expand(-1, self.num_heads, -1, -1).reshape(
+                -1, query_length, key_length
+            )
             beta = 1
 
-        attn_weights = torch.baddbmm(attn_weights, query, key, beta=beta, alpha=self._get_softmax_scale(False)).view(
-            batch_size, self.num_heads, query_length, key_length
-        )
+        attn_weights = torch.baddbmm(
+            attn_weights, query, key, beta=beta, alpha=self._get_softmax_scale(False)
+        ).view(batch_size, self.num_heads, query_length, key_length)
 
         # ==========================================================================================
         # attn_weights -> (batch_size, num_heads, query_length, key_length)
@@ -263,7 +297,9 @@ class Attention(nn.Module):
         # ==========================================================================================
 
         attn_output = attn_output.transpose(1, 2)
-        attn_output = attn_output.reshape(batch_size, -1, self.num_heads * self.head_dim)
+        attn_output = attn_output.reshape(
+            batch_size, -1, self.num_heads * self.head_dim
+        )
 
         # ==========================================================================================
         # attn_output -> (batch_size, query_length, num_heads * head_dim)
