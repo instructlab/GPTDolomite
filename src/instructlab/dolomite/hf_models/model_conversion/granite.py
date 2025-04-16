@@ -1,19 +1,28 @@
+# Third Party
 from transformers import AutoConfig, AutoTokenizer, GenerationConfig
 
+# Local
 from ...utils import SafeTensorsWeightsManager, download_repo
 from ..enums import AttentionHeadType
 from ..models import GPTDolomiteConfig
-from .llama import _export_state_dict_to_huggingface, _import_state_dict_from_huggingface
-
+from .llama import (
+    _export_state_dict_to_huggingface,
+    _import_state_dict_from_huggingface,
+)
 
 try:
+    # Third Party
     from transformers import GraniteConfig, GraniteForCausalLM
 except:
     GraniteConfig = None
 
 
-def import_from_huggingface_granite(pretrained_model_name_or_path: str, save_path: str) -> None:
-    original_config, tokenizer, downloaded_model_path = download_repo(pretrained_model_name_or_path)
+def import_from_huggingface_granite(
+    pretrained_model_name_or_path: str, save_path: str
+) -> None:
+    original_config, tokenizer, downloaded_model_path = download_repo(
+        pretrained_model_name_or_path
+    )
     config = _import_config_from_huggingface(original_config)
 
     safetensors_weights_manager = SafeTensorsWeightsManager(downloaded_model_path)
@@ -36,7 +45,9 @@ def import_from_huggingface_granite(pretrained_model_name_or_path: str, save_pat
         tokenizer.save_pretrained(save_path, legacy_format=False)
 
 
-def _import_config_from_huggingface(original_config: GraniteConfig) -> GPTDolomiteConfig:
+def _import_config_from_huggingface(
+    original_config: GraniteConfig,
+) -> GPTDolomiteConfig:
     assert original_config.hidden_act == "silu"
 
     if original_config.num_attention_heads == original_config.num_key_value_heads:
@@ -71,20 +82,32 @@ def _import_config_from_huggingface(original_config: GraniteConfig) -> GPTDolomi
         bos_token_id=original_config.bos_token_id,
         eos_token_id=original_config.eos_token_id,
         pad_token_id=original_config.pad_token_id,
-        m_emb=None if original_config.embedding_multiplier == 1 else original_config.embedding_multiplier,
-        m_residual=None if original_config.residual_multiplier == 1 else original_config.residual_multiplier,
-        m_width=None if original_config.logits_scaling == 1 else original_config.logits_scaling,
+        m_emb=None
+        if original_config.embedding_multiplier == 1
+        else original_config.embedding_multiplier,
+        m_residual=None
+        if original_config.residual_multiplier == 1
+        else original_config.residual_multiplier,
+        m_width=None
+        if original_config.logits_scaling == 1
+        else original_config.logits_scaling,
         attention_multiplier=original_config.attention_multiplier,
     )
 
     return config
 
 
-def export_to_huggingface_granite(pretrained_model_name_or_path: str, save_path: str) -> None:
-    config: GPTDolomiteConfig = AutoConfig.from_pretrained(pretrained_model_name_or_path)
+def export_to_huggingface_granite(
+    pretrained_model_name_or_path: str, save_path: str
+) -> None:
+    config: GPTDolomiteConfig = AutoConfig.from_pretrained(
+        pretrained_model_name_or_path
+    )
     original_config = _export_config_to_huggingface(config)
 
-    safetensors_weights_manager = SafeTensorsWeightsManager(pretrained_model_name_or_path)
+    safetensors_weights_manager = SafeTensorsWeightsManager(
+        pretrained_model_name_or_path
+    )
     state_dict = _export_state_dict_to_huggingface(
         safetensors_weights_manager,
         config.n_layer,
@@ -119,7 +142,9 @@ def _export_config_to_huggingface(config: GPTDolomiteConfig) -> GraniteConfig:
         num_hidden_layers=config.n_layer,
         num_attention_heads=config.n_head,
         num_key_value_heads=config.num_key_value_heads,
-        intermediate_size=4 * config.n_embd if config.n_inner is None else config.n_inner,
+        intermediate_size=4 * config.n_embd
+        if config.n_inner is None
+        else config.n_inner,
         hidden_act="silu",
         rms_norm_eps=config.layer_norm_epsilon,
         use_cache=config.use_cache,

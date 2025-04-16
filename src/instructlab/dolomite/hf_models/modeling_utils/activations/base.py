@@ -1,6 +1,6 @@
-import torch.nn as nn
+# Third Party
 from transformers.activations import ACT2CLS, ClassInstantier
-
+import torch.nn as nn
 
 _BASE_ACTIVATIONS = {
     "celu": nn.modules.CELU,

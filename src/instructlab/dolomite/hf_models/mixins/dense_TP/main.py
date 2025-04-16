@@ -1,14 +1,21 @@
+# Future
 from __future__ import annotations
 
+# Standard
 from contextlib import nullcontext
 
-import torch
-import torch.nn.functional as F
+# Third Party
 from torch.distributed._tensor.placement_types import Replicate, Shard
 from torch.distributed.tensor.parallel import loss_parallel
 from transformers import DynamicCache
-from transformers.modeling_outputs import BaseModelOutputWithPast, CausalLMOutputWithPast
+from transformers.modeling_outputs import (
+    BaseModelOutputWithPast,
+    CausalLMOutputWithPast,
+)
+import torch
+import torch.nn.functional as F
 
+# Local
 from ....utils import ProcessGroupManager, SafeTensorsWeightsManager
 from ...config import CommonConfig
 from ...enums import PositionEmbeddingType
@@ -58,18 +65,20 @@ class CausalLMModelMixin_TP(PreTrainedModelMixin_TP, CausalLMModelMixin):
         cu_seqlens: torch.Tensor | None = None,
         max_seqlen: torch.Tensor | None = None,
     ) -> tuple | CausalLMOutputWithPast:
-        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = self.prepare_inputs_for_model(
-            input_ids=input_ids,
-            inputs_embeds=inputs_embeds,
-            position_ids=position_ids,
-            token_type_ids=token_type_ids,
-            labels=labels,
-            cu_seqlens=cu_seqlens,
-            max_seqlen=max_seqlen,
-            past_key_values=past_key_values,
-            attention_mask=attention_mask,
-            use_cache=use_cache,
-            output_attentions=output_attentions,
+        input_ids, position_ids, token_type_ids, labels, cu_seqlens, max_seqlen = (
+            self.prepare_inputs_for_model(
+                input_ids=input_ids,
+                inputs_embeds=inputs_embeds,
+                position_ids=position_ids,
+                token_type_ids=token_type_ids,
+                labels=labels,
+                cu_seqlens=cu_seqlens,
+                max_seqlen=max_seqlen,
+                past_key_values=past_key_values,
+                attention_mask=attention_mask,
+                use_cache=use_cache,
+                output_attentions=output_attentions,
+            )
         )
 
         transformer_outputs: BaseModelOutputWithPast = self.transformer(
@@ -90,15 +99,21 @@ class CausalLMModelMixin_TP(PreTrainedModelMixin_TP, CausalLMModelMixin):
         if self.m_width is not None:
             lm_logits = lm_logits / self.m_width
 
-        loss = self.get_autoregressive_language_modeling_loss(lm_logits, labels, cu_seqlens)
+        loss = self.get_autoregressive_language_modeling_loss(
+            lm_logits, labels, cu_seqlens
+        )
 
         if output_parallel_lm_logits:
             assert self.tensor_parallel_word_embeddings
         else:
             if self.tensor_parallel_word_embeddings:
                 # all gather
-                lm_logits = tensor_to_dtensor(lm_logits, device_mesh=self.tp_mesh, current_placement=Shard(-1))
-                lm_logits = dtensor_to_tensor(lm_logits, device_mesh=self.tp_mesh, desired_placement=Replicate())
+                lm_logits = tensor_to_dtensor(
+                    lm_logits, device_mesh=self.tp_mesh, current_placement=Shard(-1)
+                )
+                lm_logits = dtensor_to_tensor(
+                    lm_logits, device_mesh=self.tp_mesh, desired_placement=Replicate()
+                )
 
         return CausalLMOutputWithPast(
             loss=loss,
@@ -123,7 +138,10 @@ class CausalLMModelMixin_TP(PreTrainedModelMixin_TP, CausalLMModelMixin):
         )
 
     def get_autoregressive_language_modeling_loss(
-        self, lm_logits: torch.Tensor, labels: torch.Tensor | None, cu_seqlens: torch.Tensor
+        self,
+        lm_logits: torch.Tensor,
+        labels: torch.Tensor | None,
+        cu_seqlens: torch.Tensor,
     ) -> torch.Tensor:
         if labels is None:
             return None
@@ -143,16 +161,24 @@ class CausalLMModelMixin_TP(PreTrainedModelMixin_TP, CausalLMModelMixin):
         shift_logits = tensor_to_dtensor(
             shift_logits,
             device_mesh=self.tp_mesh,
-            current_placement=Shard(-1) if self.tensor_parallel_word_embeddings else Replicate(),
+            current_placement=Shard(-1)
+            if self.tensor_parallel_word_embeddings
+            else Replicate(),
         )
-        shift_labels = tensor_to_dtensor(shift_labels, device_mesh=self.tp_mesh, current_placement=Replicate())
+        shift_labels = tensor_to_dtensor(
+            shift_labels, device_mesh=self.tp_mesh, current_placement=Replicate()
+        )
 
         if self.upcast_logits_for_loss:
             shift_logits = shift_logits.float()
 
-        loss_context = loss_parallel if self.tensor_parallel_word_embeddings else nullcontext
+        loss_context = (
+            loss_parallel if self.tensor_parallel_word_embeddings else nullcontext
+        )
         with loss_context():
-            loss = F.cross_entropy(shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1))
+            loss = F.cross_entropy(
+                shift_logits.view(-1, shift_logits.size(-1)), shift_labels.view(-1)
+            )
 
         return loss
 
@@ -164,23 +190,35 @@ class CausalLMModelMixin_TP(PreTrainedModelMixin_TP, CausalLMModelMixin):
         tensor_parallel_word_embeddings: bool = False,
         **kwargs,
     ) -> CausalLMModelMixin_TP:
-        config: CommonConfig = cls.config_class.from_pretrained(pretrained_model_name_or_path)
+        config: CommonConfig = cls.config_class.from_pretrained(
+            pretrained_model_name_or_path
+        )
 
         # use dummy tensors to avoid initializing model here
         with torch.device("meta"):
             # try sharding vocab matrices if really struggling for memory
-            model = cls._from_config(config, tensor_parallel_word_embeddings=tensor_parallel_word_embeddings, **kwargs)
+            model = cls._from_config(
+                config,
+                tensor_parallel_word_embeddings=tensor_parallel_word_embeddings,
+                **kwargs,
+            )
             model = model.to(dtype=torch_dtype)
 
         # copy to device without copying storage
         model = model.to_empty(device=torch.cuda.current_device())
-        model.load_from_safetensors_weights_manager(SafeTensorsWeightsManager(pretrained_model_name_or_path))
+        model.load_from_safetensors_weights_manager(
+            SafeTensorsWeightsManager(pretrained_model_name_or_path)
+        )
 
         return model
 
-    def load_from_safetensors_weights_manager(self, safetensors_weights_manager: SafeTensorsWeightsManager) -> None:
+    def load_from_safetensors_weights_manager(
+        self, safetensors_weights_manager: SafeTensorsWeightsManager
+    ) -> None:
         with torch.device(torch.cuda.current_device()):
-            position_embedding_type = PositionEmbeddingType(self.config.position_embedding_type)
+            position_embedding_type = PositionEmbeddingType(
+                self.config.position_embedding_type
+            )
 
             if position_embedding_type == PositionEmbeddingType.alibi:
                 self.transformer.alibi.reset_parameters()

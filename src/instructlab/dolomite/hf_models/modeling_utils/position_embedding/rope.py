@@ -1,7 +1,9 @@
 """Logic is copied from transformers.models.llama.modeling_utils with slight modifications"""
 
+# Standard
 import math
 
+# Third Party
 import torch
 import torch.nn as nn
 
@@ -22,7 +24,9 @@ class RoPE(nn.Module):
 
         self.reset_parameters()
 
-    def forward(self, seq_len: int, dtype: torch.dtype, device: torch.device) -> tuple[torch.Tensor, torch.Tensor]:
+    def forward(
+        self, seq_len: int, dtype: torch.dtype, device: torch.device
+    ) -> tuple[torch.Tensor, torch.Tensor]:
         if seq_len > self.max_seq_len_cached:
             self._set_cos_sin_cache(seq_len=seq_len, device=device, dtype=dtype)
 
@@ -32,10 +36,14 @@ class RoPE(nn.Module):
         return cos, sin
 
     def reset_parameters(self) -> None:
-        self._set_cos_sin_cache(seq_len=self.max_position_embeddings, device=None, dtype=torch.float32)
+        self._set_cos_sin_cache(
+            seq_len=self.max_position_embeddings, device=None, dtype=torch.float32
+        )
 
     @torch.no_grad()
-    def _set_cos_sin_cache(self, seq_len: int, device: torch.device, dtype: torch.dtype) -> None:
+    def _set_cos_sin_cache(
+        self, seq_len: int, device: torch.device, dtype: torch.dtype
+    ) -> None:
         self.max_seq_len_cached = seq_len
 
         inv_freq = self._get_inv_freq(device)
@@ -46,12 +54,20 @@ class RoPE(nn.Module):
         # Different from paper, but it uses a different permutation in order to obtain the same calculation
         emb = torch.cat((freqs, freqs), dim=-1)
 
-        self.register_buffer("cos_cached", (emb.cos() * self.mscale).to(dtype), persistent=False)
-        self.register_buffer("sin_cached", (emb.sin() * self.mscale).to(dtype), persistent=False)
+        self.register_buffer(
+            "cos_cached", (emb.cos() * self.mscale).to(dtype), persistent=False
+        )
+        self.register_buffer(
+            "sin_cached", (emb.sin() * self.mscale).to(dtype), persistent=False
+        )
 
     def _get_inv_freq(self, device: torch.device) -> torch.Tensor:
         return 1.0 / (
-            self.base ** (torch.arange(0, self.head_dim, 2, dtype=torch.float32, device=device) / self.head_dim)
+            self.base
+            ** (
+                torch.arange(0, self.head_dim, 2, dtype=torch.float32, device=device)
+                / self.head_dim
+            )
         )
 
 
@@ -86,17 +102,27 @@ class YaRNScaledRoPE(RoPE):
         self.reset_parameters()
 
     def _get_inv_freq(self, device: torch.device) -> torch.Tensor:
-        pos_freqs = self.base ** (torch.arange(0, self.head_dim, 2).float() / self.head_dim)
+        pos_freqs = self.base ** (
+            torch.arange(0, self.head_dim, 2).float() / self.head_dim
+        )
         inv_freq_extrapolation = 1.0 / pos_freqs
         inv_freq_interpolation = 1.0 / (self.scale * pos_freqs)
 
         low, high = _yarn_find_correction_range(
-            self.beta_fast, self.beta_slow, self.head_dim, self.base, self.original_max_position_embeddings
+            self.beta_fast,
+            self.beta_slow,
+            self.head_dim,
+            self.base,
+            self.original_max_position_embeddings,
         )
         inv_freq_mask = (
-            1 - _yarn_linear_ramp_mask(low, high, self.head_dim // 2).float()
-        ) * self.extrapolation_factor  # Get n-d rotational scaling corrected for extrapolation
-        inv_freq = inv_freq_interpolation * (1 - inv_freq_mask) + inv_freq_extrapolation * inv_freq_mask
+            (1 - _yarn_linear_ramp_mask(low, high, self.head_dim // 2).float())
+            * self.extrapolation_factor
+        )  # Get n-d rotational scaling corrected for extrapolation
+        inv_freq = (
+            inv_freq_interpolation * (1 - inv_freq_mask)
+            + inv_freq_extrapolation * inv_freq_mask
+        )
 
         return inv_freq
 
@@ -118,15 +144,25 @@ def _rotate_half(x: torch.Tensor) -> torch.Tensor:
 def _yarn_find_correction_dim(
     num_rotations: int, dim: int, base: int = 10000, max_position_embeddings: int = 2048
 ) -> float:
-    return (dim * math.log(max_position_embeddings / (num_rotations * 2 * math.pi))) / (2 * math.log(base))
+    return (dim * math.log(max_position_embeddings / (num_rotations * 2 * math.pi))) / (
+        2 * math.log(base)
+    )
 
 
 # Find dim range bounds based on rotations
 def _yarn_find_correction_range(
-    low_rot: int, high_rot: int, dim: int, base: int = 10000, max_position_embeddings: int = 2048
+    low_rot: int,
+    high_rot: int,
+    dim: int,
+    base: int = 10000,
+    max_position_embeddings: int = 2048,
 ) -> int:
-    low = math.floor(_yarn_find_correction_dim(low_rot, dim, base, max_position_embeddings))
-    high = math.ceil(_yarn_find_correction_dim(high_rot, dim, base, max_position_embeddings))
+    low = math.floor(
+        _yarn_find_correction_dim(low_rot, dim, base, max_position_embeddings)
+    )
+    high = math.ceil(
+        _yarn_find_correction_dim(high_rot, dim, base, max_position_embeddings)
+    )
     return max(low, 0), min(high, dim - 1)  # Clamp values just in case
 
 

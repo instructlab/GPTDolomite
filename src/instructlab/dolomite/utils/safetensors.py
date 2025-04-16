@@ -1,11 +1,13 @@
+# Standard
 import json
 import os
 
-import torch
+# Third Party
 from huggingface_hub import split_torch_state_dict_into_shards
 from safetensors import safe_open
 from safetensors.torch import save_file
 from transformers.modeling_utils import SAFE_WEIGHTS_INDEX_NAME
+import torch
 
 
 class SafeTensorsWeightsManager:
@@ -33,7 +35,10 @@ class SafeTensorsWeightsManager:
         return f.get_slice(tensor_name)
 
     def get_tensor(
-        self, tensor_name: str, dtype: torch.dtype | None = None, device: torch.device | None = None
+        self,
+        tensor_name: str,
+        dtype: torch.dtype | None = None,
+        device: torch.device | None = None,
     ) -> torch.Tensor:
         filename = self.tensor_filenames[tensor_name]
         f = self.file_handles[filename]

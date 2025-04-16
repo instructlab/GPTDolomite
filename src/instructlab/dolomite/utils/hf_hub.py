@@ -1,11 +1,15 @@
+# Standard
 import os
 
+# Third Party
 from transformers import AutoConfig, AutoTokenizer
 from transformers.utils import SAFE_WEIGHTS_INDEX_NAME, SAFE_WEIGHTS_NAME, cached_file
 from transformers.utils.hub import get_checkpoint_shard_files
 
 
-def download_repo(repo_name_or_path: str) -> tuple[AutoConfig | None, AutoTokenizer | None, str]:
+def download_repo(
+    repo_name_or_path: str,
+) -> tuple[AutoConfig | None, AutoTokenizer | None, str]:
     config = _download_config(repo_name_or_path)
     tokenizer = _download_tokenizer(repo_name_or_path)
     model_path = None
@@ -20,7 +24,9 @@ def download_repo(repo_name_or_path: str) -> tuple[AutoConfig | None, AutoTokeni
         except:
             # try downloading model weights if they are sharded
             try:
-                sharded_filename = cached_file(repo_name_or_path, SAFE_WEIGHTS_INDEX_NAME)
+                sharded_filename = cached_file(
+                    repo_name_or_path, SAFE_WEIGHTS_INDEX_NAME
+                )
                 get_checkpoint_shard_files(repo_name_or_path, sharded_filename)
                 model_path = os.path.dirname(sharded_filename)
             except:

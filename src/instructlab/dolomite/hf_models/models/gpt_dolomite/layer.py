@@ -1,7 +1,9 @@
+# Third Party
+from transformers import DynamicCache
 import torch
 import torch.nn as nn
-from transformers import DynamicCache
 
+# Local
 from ...enums import AttentionHeadType
 from ...modeling_utils import get_attention_module, get_normalization_function
 from .config import GPTDolomiteConfig
@@ -36,7 +38,11 @@ class GPTDolomiteBlock(nn.Module):
             normalization_implementation=normalization_implementation,
         )
         self.attn = get_attention_module(
-            config, True, attention_implementation, use_padding_free_transformer, layer_idx
+            config,
+            True,
+            attention_implementation,
+            use_padding_free_transformer,
+            layer_idx,
         )
         self.ln_2 = get_normalization_function(
             config.normalization_function,
